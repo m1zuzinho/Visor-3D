@@ -1,38 +1,50 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Pandora Cava 3D</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
-/* Layout: visor 3D grande a la izquierda (fijo en escritorio) + columna de control a la derecha; en teléfono, visor arriba y controles debajo. Marca Pandora: azul marino profundo, naranja de señal. */
+/* Diseñador 3D con el mismo estilo que la calculadora: vidrio sobre el visor, listas y campos redondeados,
+   letra del sistema. Mismos colores, mismas clases; la lógica no cambia. */
 :root {
-  --bg: #000F26; --navy: #001A3E; --card: #0B2C5C; --card-2: #0A2550; --line: #1E3F6E;
+  --bg: #000F26; --navy: #001A3E; --card: #0B2C5C; --card-2: #0A2550; --line: rgba(255,255,255,.09);
   --orange: #FF6B12; --orange-soft: #FF9550; --ice: #8FD0FF;
   --ink: #FFFFFF; --soft: #C3CFDF; --muted: #8FA2BC;
   --good: #4FD39A; --warn: #FFC34D;
   --c-trans: #8FD0FF; --c-puerta: #FF6B12; --c-prod: #FFC34D; --c-int: #B79CFF;
-  --display: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
-  --body: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+  --field: rgba(118,138,180,.16);
+  --tint: rgba(255,107,18,.16);
+  --glass: rgba(0,26,62,.62);
+  --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", Roboto, system-ui, sans-serif;
+  --body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  --ease-out: cubic-bezier(0.23,1,0.32,1);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { height: 100%; overscroll-behavior: contain; }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45; }
-.top { display: flex; align-items: center; gap: 14px; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: var(--navy); border-bottom: 1px solid var(--line); }
+html, body { height: 100%; overscroll-behavior: contain; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.42; letter-spacing: -.01em; -webkit-font-smoothing: antialiased; }
+button { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* los planos dibujan en metros: el espaciado de letras de la página se volvería centímetros y encimaría el texto */
+svg { letter-spacing: normal; }
+
+/* ---------- Encabezado ---------- */
+.top { display: flex; align-items: center; gap: 14px; padding-block: 12px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: linear-gradient(180deg, #0a2350, var(--navy)); box-shadow: 0 .5px 0 var(--line); }
 .top[hidden] { display: none; }
-.app.emb { height: 100% !important; }
 .top img { height: 46px; width: auto; flex-shrink: 0; filter: drop-shadow(0 0 12px rgba(140,190,255,.25)); }
 .brand { display: flex; flex-direction: column; min-width: 0; }
-.brand .eyebrow { font-family: var(--display); font-weight: 700; font-size: 13px; letter-spacing: .14em; color: var(--orange); text-transform: uppercase; }
-.brand h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.05; text-wrap: balance; }
+.brand .eyebrow { font-family: var(--body); font-weight: 600; font-size: 12px; letter-spacing: .06em; color: var(--orange); text-transform: uppercase; }
+.brand h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -.03em; line-height: 1.08; text-wrap: balance; }
 .brand h1 span { color: var(--orange); }
 .app { display: grid; grid-template-columns: minmax(0, 1fr); }
+
+/* ---------- Visor 3D: los controles flotan como vidrio encima ---------- */
 .viewer { position: relative; height: 58vh; min-height: 340px; background: radial-gradient(ellipse 75% 60% at 50% 45%, #0C3B7A 0%, var(--navy) 60%, var(--bg) 100%); overflow: hidden; touch-action: none; }
 .viewer canvas { display: block; width: 100%; height: 100%; outline: none; }
 .labels { position: absolute; inset: 0; pointer-events: none; }
 .labels[hidden] { display: none; }
-#cotas[aria-pressed="true"] { background: var(--orange); border-color: var(--orange); color: #fff; }
+#cotas[aria-pressed="true"] { background: var(--orange); color: #fff; box-shadow: none; }
+.volverFijo { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 60; box-shadow: 0 10px 24px -6px rgba(0,0,0,.6); }
+/* vista del cliente (enlace o QR): solo el modelo a pantalla completa, sin botones ni edición */
 .cliente body, .cliente .app { height: 100%; }
-.cliente .top, .cliente .panel, .cliente .vtools, .cliente .sep, .cliente .hud, .cliente .help, .cliente .labels { display: none !important; }
+.cliente .top, .cliente .panel, .cliente .vtools, .cliente .rail, .cliente .salaBar, .cliente .sep, .cliente .hud, .cliente .help, .cliente .labels { display: none !important; }
 .cliente .app { display: block; }
 .cliente .viewer { position: fixed !important; inset: 0; height: auto !important; min-height: 0; box-shadow: none; z-index: 1; }
 .cliMarca { position: absolute; z-index: 2; left: max(14px, env(safe-area-inset-left, 0px)); top: calc(12px + env(safe-area-inset-top, 0px)); pointer-events: none; color: #fff; font: 600 13px/1.25 'Barlow Condensed', Arial, sans-serif; letter-spacing: .14em; opacity: .85; }
@@ -40,90 +52,125 @@ body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--b
 .cliMarca span { display: block; letter-spacing: .04em; font: 500 13px 'Barlow', Arial, sans-serif; color: #c9d3e2; margin-top: 2px; }
 .cliAviso { position: absolute; z-index: 2; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); text-align: center; pointer-events: none; font: 500 13px 'Barlow', Arial, sans-serif; color: #e8eef8; background: rgba(0,15,38,.72); padding: 7px 14px; border-radius: 999px; transition: opacity .8s; }
 .cliAviso.fuera { opacity: 0; }
-.volverFijo { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 60; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
-.chip.in { color: #ffb184; border-color: rgba(255,149,80,.7); background: rgba(6,24,58,.82); font-size: 11px; }
-.chip.lz { background: rgba(6,24,58,.75); color: #ffd2b5; border-color: rgba(255,107,18,.6); }
-.chip.lc { background: rgba(6,24,58,.75); color: #fff; }
-.chip { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: .03em; background: var(--card); border: 1px solid #2B5288; color: var(--ink); padding: 1px 7px; border-radius: 999px; font-variant-numeric: tabular-nums; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
-.chip.on { background: var(--orange); border-color: var(--orange-soft); }
-.chip.dz { font-size: 14px; padding: 2px 9px; background: var(--orange); border-color: var(--orange-soft); }
-.chip.dz.pz { background: #fff; color: var(--navy); border-color: #fff; }
+.cliError { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: #e8eef8; font: 500 16px 'Barlow', Arial, sans-serif; z-index: 3; }
+
+.chip { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; font-family: var(--display); font-weight: 600; font-size: 12px; letter-spacing: -.005em;
+  background: rgba(11,44,92,.72); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.18) inset, 0 4px 12px rgba(0,0,0,.35);
+  color: var(--ink); padding: 2px 8px; border-radius: 999px; font-variant-numeric: tabular-nums; }
+.chip.in { color: #ffb184; background: rgba(6,24,58,.78); box-shadow: 0 0 0 .5px rgba(255,149,80,.6) inset; font-size: 11px; }
+.chip.lz { background: rgba(6,24,58,.72); color: #ffd2b5; box-shadow: 0 0 0 .5px rgba(255,107,18,.55) inset; }
+.chip.lc { background: rgba(6,24,58,.72); color: #fff; }
+.chip.on { background: var(--orange); box-shadow: 0 4px 12px rgba(255,107,18,.35); }
+.chip.dz { font-size: 14px; padding: 3px 10px; background: var(--orange); box-shadow: 0 4px 12px rgba(255,107,18,.35); }
+.chip.dz.pz { background: #fff; color: var(--navy); }
 .chip b { color: var(--orange-soft); margin-right: 4px; }
 .chip.on b { color: #fff; }
+
 .vtools { position: absolute; top: 12px; right: max(12px, env(safe-area-inset-right, 0px)); display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-.sep { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: 12px; display: flex; align-items: center; gap: 8px; background: rgba(0,15,38,.82); border: 1px solid var(--line); border-radius: 12px; padding: 4px 12px; font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--soft); width: min(46%, 220px); }
+.vtools .btn.ghost, .vtools .seg { background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); box-shadow: 0 0 0 .5px rgba(255,255,255,.14) inset; color: var(--ink); }
+.sep { position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: 12px; display: flex; align-items: center; gap: 8px;
+  background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  border: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.14) inset; border-radius: 14px; padding: 4px 12px; font-family: var(--body); font-weight: 600; font-size: 13px; color: var(--soft); width: min(46%, 220px); }
 .sep input { flex: 1; min-width: 0; height: 26px; }
 .hud { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
-.hud div { background: rgba(0,15,38,.82); border: 1px solid var(--line); border-radius: 12px; padding: 6px 12px; font-family: var(--display); font-weight: 700; font-size: 20px; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.hud small { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.hud div { background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  border: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.14) inset; border-radius: 14px; padding: 6px 12px;
+  font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -.03em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.hud small { display: block; font-family: var(--body); font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 .hud .kw { color: var(--ice); }
-.help { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); font-size: 12px; color: var(--muted); background: rgba(0,15,38,.7); padding: 4px 12px; border-radius: 999px; pointer-events: none; white-space: nowrap; }
-.seg { display: inline-flex; background: var(--card-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; flex-wrap: wrap; }
-.seg button { font: 600 13px var(--body); color: var(--soft); background: transparent; border: 0; border-radius: 999px; padding: 7px 13px; cursor: pointer; min-height: 34px; }
-.seg button[aria-pressed="true"] { background: var(--orange); color: #fff; }
-.seg button:focus-visible, .btn:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.btn { font: 600 14px var(--body); color: #fff; background: var(--orange); border: 0; border-radius: 999px; padding: 10px 18px; cursor: pointer; min-height: 40px; }
-.btn.ghost { background: var(--card-2); border: 1px solid var(--line); color: var(--soft); }
-.panel { display: flex; flex-direction: column; gap: 14px; padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-.card { background: linear-gradient(180deg, #103a74 0%, var(--card) 100%); border: 1px solid #1d4a86; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.card h2 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: .08em; text-transform: uppercase; color: var(--soft); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+/* ayuda arriba a la izquierda: los botones del visor ocupan la derecha */
+.help { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 12px; max-width: min(300px, calc(100% - 400px)); font-size: 12px; line-height: 1.35; color: var(--soft);
+  background: var(--glass); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); box-shadow: 0 0 0 .5px rgba(255,255,255,.12) inset;
+  padding: 6px 12px; border-radius: 12px; pointer-events: none; white-space: normal; }
+/* visor demasiado angosto para la ayuda y los botones a la vez */
+@media (max-width: 639px), (min-width: 980px) and (max-width: 1039px) { .help { display: none; } }
+
+/* ---------- Control segmentado y botones ---------- */
+.seg { display: inline-flex; background: var(--field); border: 0; border-radius: 10px; padding: 2px; gap: 2px; flex-wrap: wrap; }
+.seg button { font: 600 13px var(--body); letter-spacing: -.01em; color: var(--soft); background: transparent; border: 0; border-radius: 8px; padding: 7px 13px; cursor: pointer; min-height: 34px;
+  transition: background-color 180ms ease, color 180ms ease, transform 120ms var(--ease-out); }
+.seg button:active { transform: scale(.96); }
+.seg button[aria-pressed="true"] { background: #164079; color: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.3), 0 0 0 .5px rgba(255,255,255,.12) inset; }
+.seg button:focus-visible, .btn:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.btn { font: 600 14px var(--body); letter-spacing: -.01em; color: #fff; background: var(--orange); border: 0; border-radius: 12px; padding: 10px 16px; cursor: pointer; min-height: 40px;
+  transition: transform 120ms var(--ease-out), filter 160ms ease; }
+.btn:active { transform: scale(.97); filter: brightness(.92); }
+.btn.ghost { background: var(--tint); border: 0; color: var(--orange); }
+
+/* ---------- Panel de controles ---------- */
+.panel { display: flex; flex-direction: column; gap: 16px; padding-block: 16px 40px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.card { background: var(--card); border: 0; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.06) inset; }
+.card h2 { margin: 0; font-family: var(--body); font-weight: 600; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .card h2 small { white-space: nowrap; font-family: var(--body); font-weight: 500; font-size: 12px; letter-spacing: 0; text-transform: none; color: var(--muted); }
-.result { background: linear-gradient(180deg, #12407F 0%, var(--card) 100%); border-color: #2B5288; }
+.result { background: radial-gradient(120% 100% at 100% 0%, rgba(143,208,255,.16), transparent 55%), linear-gradient(180deg, #12407F, var(--card)); box-shadow: 0 0 0 .5px rgba(255,255,255,.08) inset, 0 18px 40px -20px rgba(0,0,0,.7); }
 .big { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.big b { font-family: var(--display); font-weight: 700; font-size: 56px; line-height: 1; color: var(--ice); font-variant-numeric: tabular-nums; }
-.big span { font-family: var(--display); font-size: 24px; color: var(--soft); font-weight: 600; }
-.subs { display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--display); font-weight: 600; font-size: 19px; color: var(--soft); font-variant-numeric: tabular-nums; }
-.subs em { font-style: normal; color: var(--muted); font-size: 14px; margin-left: 3px; }
-.bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--card-2); }
-.bar i { display: block; height: 100%; transition: width .3s; }
+.big b { font-family: var(--display); font-weight: 700; font-size: 54px; letter-spacing: -.04em; line-height: 1; color: var(--ice); font-variant-numeric: tabular-nums; }
+.big span { font-family: var(--display); font-size: 22px; letter-spacing: -.02em; color: var(--soft); font-weight: 600; }
+.subs { display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: -.02em; color: var(--soft); font-variant-numeric: tabular-nums; }
+.subs em { font-style: normal; color: var(--muted); font-size: 13px; letter-spacing: 0; margin-left: 3px; }
+.bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,.08); gap: 2px; }
+.bar i { display: block; height: 100%; border-radius: 999px; transition: width 300ms var(--ease-out); }
 .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px 14px; font-size: 13px; color: var(--soft); }
 .legend div { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.legend i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-.legend b { white-space: nowrap; margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink); }
+.legend i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.legend b { white-space: nowrap; margin-left: auto; font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; }
 .note { font-size: 12.5px; color: var(--muted); margin: 0; }
-.alert { font-size: 13px; color: #1a1200; background: var(--warn); border-radius: 10px; padding: 8px 12px; margin: 0; }
+.alert { font-size: 13px; color: #1a1200; background: var(--warn); border-radius: 12px; padding: 9px 12px; margin: 0; }
 .alert[hidden] { display: none; }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.stats div { background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; min-width: 0; }
-.stats small { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-.stats b { font-family: var(--display); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.stats div { background: rgba(255,255,255,.05); border: 0; border-radius: 14px; padding: 9px 11px; min-width: 0; }
+.stats small { display: block; font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.stats b { font-family: var(--display); font-size: 22px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+
+/* ---------- Campos ---------- */
 .field { display: grid; grid-template-columns: 30px minmax(0, 1fr) 92px; align-items: center; gap: 10px; }
-.field .badge { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 17px; background: var(--card-2); border: 1px solid var(--line); color: var(--soft); }
-.field.active .badge { background: var(--orange); border-color: var(--orange-soft); color: #fff; }
-.field label { grid-column: 2 / 4; font-weight: 600; font-size: 13px; color: var(--soft); margin-bottom: -6px; }
+.field .badge { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 15px; background: var(--field); border: 0; color: var(--soft); transition: background-color 180ms ease, color 180ms ease; }
+.field.active .badge { background: var(--orange); color: #fff; }
+.field label { grid-column: 2 / 4; font-weight: 500; font-size: 13px; color: var(--soft); margin-bottom: -6px; }
 .field .badge { grid-row: span 2; }
-.num { display: flex; align-items: center; background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 0 8px; }
-.num input { width: 100%; background: transparent; border: 0; color: var(--ink); font-family: var(--display); font-weight: 700; font-size: 20px; text-align: right; padding: 5px 0; font-variant-numeric: tabular-nums; min-width: 0; }
+.num { display: flex; align-items: center; background: var(--field); border: 0; border-radius: 12px; padding: 0 10px; transition: box-shadow 160ms ease; }
+.num:focus-within { box-shadow: 0 0 0 2px var(--orange); }
+.num input { width: 100%; background: transparent; border: 0; color: var(--ink); font-family: var(--display); font-weight: 600; font-size: 19px; letter-spacing: -.02em; text-align: right; padding: 6px 0; font-variant-numeric: tabular-nums; min-width: 0; }
+.num input:focus { outline: none; }
 .num span { color: var(--muted); font-size: 13px; margin-left: 4px; }
+/* deslizador estilo iOS: riel fino, perilla blanca con sombra */
 input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 30px; background: transparent; margin: 0; cursor: pointer; --p: 50%; }
-input[type=range]::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--orange) 0 var(--p), #23477A var(--p) 100%); }
-input[type=range]::-moz-range-track { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--orange) 0 var(--p), #23477A var(--p) 100%); }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%; background: #fff; border: 3px solid var(--orange); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
-input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--orange); }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 999px; background: linear-gradient(90deg, var(--orange) 0 var(--p), rgba(255,255,255,.16) var(--p) 100%); }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 999px; background: linear-gradient(90deg, var(--orange) 0 var(--p), rgba(255,255,255,.16) var(--p) 100%); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; margin-top: -11px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 0 .5px rgba(0,0,0,.08), 0 3px 8px rgba(0,0,0,.35); }
+input[type=range]::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 3px 8px rgba(0,0,0,.35); }
 .row { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.row > span { font-weight: 600; font-size: 13px; color: var(--soft); }
+.row > span { font-weight: 500; font-size: 13px; color: var(--soft); }
 .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-select, .txt { width: 100%; font: 500 14px var(--body); color: var(--ink); background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; min-height: 40px; }
+select, .txt { width: 100%; font: 500 15px var(--body); color: var(--ink); background: var(--field); border: 0; border-radius: 12px; padding: 10px 12px; min-height: 42px; }
+select { appearance: none; -webkit-appearance: none; padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='14' viewBox='0 0 10 14'%3E%3Cpath d='M2 5l3-3 3 3M2 9l3 3 3-3' fill='none' stroke='%23C3CFDF' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; }
+select option { background: var(--card); color: var(--ink); }
 .check { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--soft); cursor: pointer; }
 .check input { width: 20px; height: 20px; accent-color: var(--orange); }
 textarea.txt { min-height: 190px; resize: vertical; font-size: 13px; line-height: 1.5; font-family: var(--body); }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.ok { color: var(--good); font-size: 13px; }
+.ok { color: var(--good); font-size: 13px; font-weight: 500; }
 .stack { display: flex; flex-direction: column; gap: 12px; }
 .stack[hidden], .planbar[hidden], .vedit[hidden] { display: none; }
-.btn.sm { font-size: 13px; padding: 7px 13px; min-height: 34px; }
+.btn.sm { font-size: 13px; padding: 7px 13px; min-height: 34px; border-radius: 10px; }
 .btn:disabled { opacity: .4; cursor: default; }
 .presets { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---------- Plano ---------- */
 .planwrap { display: flex; flex-direction: column; gap: 6px; }
 .planbox { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .cotain { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.cotain label { position: absolute; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 3px; pointer-events: auto; background: rgba(6,24,58,.9); border: 1px solid var(--line); border-radius: 6px; padding: 1px 3px 1px 5px; }
-.cotain label.sel { border-color: var(--orange); }
-.cotain label.dv { border-color: #ffd166; }
+.cotain label { position: absolute; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 3px; pointer-events: auto;
+  background: rgba(6,24,58,.85); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.16) inset; border-radius: 8px; padding: 1px 4px 1px 6px; }
+.cotain label.sel { box-shadow: 0 0 0 1.5px var(--orange) inset; }
+.cotain label.dv { box-shadow: 0 0 0 1px #ffd166 inset; }
 .cotain label.dv b { color: #ffd166; }
 .cotain b { font-family: var(--display); font-size: 11px; color: #c9d3e2; font-weight: 700; }
 .cotain input { width: 48px; font: 600 12px var(--display); color: #fff; background: transparent; border: 0; padding: 2px 0; text-align: right; }
-.cotain input:focus { outline: 1px solid var(--orange); border-radius: 3px; }
+.cotain input:focus { outline: 1px solid var(--orange); border-radius: 4px; }
 .cotain span { font-size: 10px; color: var(--muted); }
 .plantools { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .plantools .zoom { display: inline-flex; gap: 4px; }
@@ -132,33 +179,46 @@ textarea.txt { min-height: 190px; resize: vertical; font-size: 13px; line-height
 .planwrap.full .plan { flex: 1; height: auto; min-height: 0; }
 .planwrap.full .planbar { margin-top: 0; }
 body.planfull { overflow: hidden; }
+/* computadora: al dibujar desde cero, la planta ocupa el área grande del 3D (la cava anterior no estorba) */
+.planwrap.visor { position: fixed; z-index: 300; background: var(--bg); padding: 12px; }
+.planwrap.visor .plan { flex: 1; height: auto; min-height: 0; }
+.planwrap.visor .planbar { margin-top: 0; }
+.planwrap.visor #pAmp { display: none; }
+/* dibujando sobre el 3D: la planta se oculta y la barra queda abajo, encima del 3D */
+.planwrap.tres .plantools, .planwrap.tres .planbox { display: none; }
+.planwrap.visor.tres { background: transparent; pointer-events: none; justify-content: flex-end; }
+.planwrap.visor.tres .planbar { pointer-events: auto; }
+body.dib3d .viewer .vtools, body.dib3d .viewer .sep, body.dib3d .viewer .hud, body.dib3d > .volverFijo { display: none; }
 .medir { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
 .medir .num { flex: 1; min-width: 150px; }
 .flechas { display: inline-flex; gap: 4px; }
 .flechas .btn { min-width: 40px; font-size: 16px; }
 .planley { margin: 2px 0 0; }
 .salasInfo { display: flex; flex-wrap: wrap; gap: 6px; }
-.salasInfo span { font-size: 12px; background: rgba(127,227,240,.12); border: 1px solid rgba(127,227,240,.45); color: #c9f4fa; border-radius: 6px; padding: 3px 8px; }
+.salasInfo span { font-size: 12px; background: rgba(127,227,240,.12); border: 0; box-shadow: 0 0 0 .5px rgba(127,227,240,.45) inset; color: #c9f4fa; border-radius: 999px; padding: 3px 10px; }
 .salasInfo b { color: #fff; font-family: var(--display); }
-#pCajas[aria-pressed="true"] { border-color: var(--orange); color: #fff; }
-#pSalas[aria-pressed="true"] { background: rgba(127,227,240,.18); border-color: #7fe3f0; color: #c9f4fa; }
-.plan { display: block; width: 100%; height: 300px; background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; touch-action: none; user-select: none; -webkit-user-select: none; }
+#pCajas[aria-pressed="true"] { background: var(--orange); color: #fff; }
+#pSalas[aria-pressed="true"] { background: rgba(127,227,240,.18); color: #c9f4fa; }
+.plan { display: block; width: 100%; height: 300px; background: var(--card-2); border: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.08) inset; border-radius: 16px; touch-action: none; user-select: none; -webkit-user-select: none; }
 .plan text { font-family: var(--display); font-weight: 700; pointer-events: none; }
 .plan .v { cursor: grab; }
 .plan .mid { cursor: copy; }
-.planbar { margin-top: 8px; display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: rgba(0,15,38,.88); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12.5px; color: var(--soft); }
+.planbar { margin-top: 8px; display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  border: 0; box-shadow: 0 0 0 .5px rgba(255,255,255,.12) inset; border-radius: 14px; padding: 8px 10px; font-size: 12.5px; color: var(--soft); }
 .vedit { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto; gap: 8px; align-items: center; }
 .vedit .num span:first-child { color: var(--orange-soft); font-family: var(--display); font-weight: 700; margin: 0 6px 0 0; }
-.vtag { font-family: var(--display); font-weight: 700; font-size: 15px; color: var(--soft); white-space: nowrap; }
+.vtag { font-family: var(--display); font-weight: 700; font-size: 15px; letter-spacing: -.02em; color: var(--soft); white-space: nowrap; }
 @media (max-width: 420px) { .vedit { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .plan { height: 260px; } }
 .wlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; }
-.wlist label { display: flex; align-items: center; gap: 6px; background: var(--card-2); border: 1px solid var(--line); border-radius: 10px; padding: 2px 8px; }
+.wlist label { display: flex; align-items: center; gap: 6px; background: var(--field); border: 0; border-radius: 12px; padding: 2px 10px; }
 .wlist label b { font-family: var(--display); color: var(--orange-soft); font-size: 15px; }
-.wlist input { width: 100%; min-width: 0; background: transparent; border: 0; color: var(--ink); font-family: var(--display); font-weight: 700; font-size: 17px; text-align: right; padding: 5px 0; }
+.wlist input { width: 100%; min-width: 0; background: transparent; border: 0; color: var(--ink); font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: -.02em; text-align: right; padding: 6px 0; }
 .xlist { display: grid; gap: 8px; }
-.xitem { display: grid; gap: 8px; background: var(--card-2); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
-.xitem.sel { border-color: var(--orange); }
-.xitem .xh { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-family: var(--display); font-weight: 700; font-size: 16px; }
+.xitem { display: grid; gap: 8px; background: rgba(255,255,255,.05); border: 0; border-radius: 14px; padding: 12px; }
+.xitem.sel { background: var(--tint); box-shadow: 0 0 0 1.5px var(--orange) inset; }
+.xitem .xh { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-family: var(--display); font-weight: 700; font-size: 16px; letter-spacing: -.02em; }
+.xitem .xh .xbtns { display: flex; gap: 6px; flex: none; }
 .xitem .sfl { display: grid; gap: 4px; margin: 6px 0; }
 .xitem .pasos { display: flex; gap: 6px; }
 .xitem .pasos .btn { flex: 1; }
@@ -166,14 +226,14 @@ body.planfull { overflow: hidden; }
 .xitem .xg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .xitem .num span:first-child { color: var(--muted); font-size: 12px; margin: 0 6px 0 0; }
 .adj { display: grid; grid-template-columns: minmax(0, 1fr) 90px auto; gap: 8px; align-items: center; }
-.num.ro { min-height: 38px; justify-content: flex-end; font-family: var(--display); font-size: 20px; }
-@media (max-width: 979px) { .viewer { position: sticky; top: 0; z-index: 6; height: 44vh; min-height: 260px; box-shadow: 0 8px 18px rgba(0,0,0,.35); } }
-details summary { cursor: pointer; color: var(--soft); font-size: 13px; font-weight: 600; }
+.num.ro { min-height: 38px; justify-content: flex-end; font-family: var(--display); font-size: 19px; letter-spacing: -.02em; }
+@media (max-width: 979px) { .viewer { position: sticky; top: 0; z-index: 6; height: 44vh; min-height: 260px; box-shadow: 0 10px 24px -6px rgba(0,0,0,.55); } }
+details summary { cursor: pointer; color: var(--orange); font-size: 13px; font-weight: 600; }
 details p { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
 @media (min-width: 980px) {
   .app { grid-template-columns: minmax(0, 1fr) 400px; height: calc(100% - 71px); }
   .viewer { height: 100%; min-height: 0; }
-  .panel { overflow-y: auto; height: 100%; border-left: 1px solid var(--line); }
+  .panel { overflow-y: auto; height: 100%; box-shadow: inset .5px 0 0 var(--line); }
 }
 @media (max-width: 420px) {
   .big b { font-size: 46px; }
@@ -181,7 +241,97 @@ details p { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
   .legend { grid-template-columns: minmax(0, 1fr); }
   .help { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+/* pantalla completa: el botón fijo "Volver a la calculadora" no debe tapar Volumen/Piso ni el final del panel */
+/* ---------- Diseño compacto: el 3D ocupa todo y las opciones flotan encima, agrupadas por tipo ---------- */
+body { display: flex; flex-direction: column; overflow: hidden; }
+.top { flex: none; padding-block: 8px; }
+.brand h1 { font-size: 18px; }
+.app { flex: 1 1 auto; min-height: 0; position: relative; display: block; height: auto; }
+.volverFijo { display: none !important; }
+/* deshacer: un ícono discreto arriba a la izquierda (se aviva cuando hay algo que deshacer) */
+.undo3 { position: absolute; left: max(10px, env(safe-area-inset-left, 0px)); top: 10px; z-index: 4; width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; color: #fff; opacity: .85; cursor: pointer; filter: drop-shadow(0 1px 3px rgba(0,0,0,.5)); transition: opacity 200ms ease, transform 120ms var(--ease-out), background-color 160ms ease; }
+.undo3:disabled { opacity: .25; cursor: default; }
+.undo3:not(:disabled):active { transform: scale(.9); }
+@media (hover: hover) and (pointer: fine) { .undo3:not(:disabled):hover { opacity: 1; background: rgba(255,255,255,.08); } }
+.help { left: 56px; }
+/* herramientas: columna angosta a la izquierda */
+.rail { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); top: 56px; z-index: 3; display: flex; flex-direction: column; gap: 4px; padding: 5px; border-radius: 16px;
+  background: var(--glass); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); box-shadow: 0 0 0 .5px rgba(255,255,255,.14) inset; }
+.rail button { width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 11px; background: transparent; color: #fff; cursor: pointer; transition: background-color 160ms ease, transform 120ms var(--ease-out); }
+.rail button:active { transform: scale(.92); }
+.rail button[aria-pressed="true"] { background: var(--orange); }
+.rail button.sala { color: #7fe3f0; }
+.rail button.sala[aria-pressed="true"] { background: #7fe3f0; color: #06183a; }
+.rail hr { border: 0; height: 1px; margin: 2px 6px; background: rgba(255,255,255,.12); }
+@media (hover: hover) and (pointer: fine) { .rail button:not([aria-pressed="true"]):hover { background: rgba(255,255,255,.08); } }
+body.dib3d .rail, body.dib3d .undo3 { display: none; }
+#vPanel svg { display: block; }
+#vPanel[aria-pressed="true"] { background: var(--orange); color: #fff; }
+/* barra para dibujar una sala adyacente */
+.salaBar { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 24px);
+  padding: 6px 6px 6px 14px; border-radius: 16px; background: rgba(0,26,62,.88); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 0 0 1px rgba(127,227,240,.4), 0 18px 40px -20px rgba(0,0,0,.8); color: #c9f4fa; font-size: 13px; }
+.salaBar[hidden] { display: none; }
+.salaBar .btn { background: transparent; color: #7fe3f0; flex: none; }
+body.sala3d .viewer .hud, body.sala3d .viewer .sep { display: none; }
+/* secciones plegables: una abierta a la vez, cerradas muestran un resumen */
+.panel .card { padding: 0; gap: 0; border-radius: 14px; background: rgba(255,255,255,.035); box-shadow: none; transition: background-color 200ms ease; }
+.panel .card.abierta { background: rgba(255,255,255,.065); }
+.card > h2 { display: block; text-transform: none; letter-spacing: -.01em; }
+.cabBtn { width: 100%; display: flex; align-items: center; gap: 10px; padding: 12px; border: 0; border-radius: 14px; background: transparent; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.cabBtn:focus-visible { outline: 2px solid var(--orange); outline-offset: -2px; }
+.cabBtn .ico { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 9px; background: var(--tint); color: var(--orange-soft); }
+.cabBtn .ico.ce { background: rgba(127,227,240,.14); color: #7fe3f0; }
+.cabBtn .ico.gr { background: rgba(201,211,226,.14); color: #dfe5ea; }
+.cabBtn .tit { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+.cabBtn .tit b { font: 600 15px var(--body); letter-spacing: -.01em; color: var(--ink); }
+.cabBtn .res { font: 500 12px var(--body); letter-spacing: 0; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.cabBtn .chev { flex: none; color: var(--muted); transition: transform 260ms var(--ease-out); }
+.card.abierta .chev { transform: rotate(90deg); }
+.cuerpo { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 320ms var(--ease-drawer); }
+.card.abierta .cuerpo { grid-template-rows: 1fr; }
+.cuerpo-in { overflow: hidden; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 0 12px; }
+.card.abierta .cuerpo-in { padding-bottom: 14px; }
+.grupo { margin: 4px 0 -4px; font: 700 11px var(--body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.grupo.fuera { color: #7fe3f0; }
+.btn.salaBtn { background: rgba(127,227,240,.14); color: #c9f4fa; box-shadow: inset 0 0 0 1px rgba(127,227,240,.3); }
+.row[hidden], label.row[hidden] { display: none; }
+.abTxt { color: var(--orange-soft); font-weight: 700; margin-left: 4px; font-variant-numeric: tabular-nums; }
+/* laptop: panel flotante a la derecha, se puede esconder */
+@media (min-width: 980px) {
+  .viewer { position: absolute; inset: 0; height: auto; min-height: 0; }
+  .panel { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 340px; height: auto; padding: 8px; gap: 6px; border-radius: 20px; z-index: 5;
+    background: rgba(8,28,62,.84); -webkit-backdrop-filter: blur(30px) saturate(180%); backdrop-filter: blur(30px) saturate(180%);
+    box-shadow: inset 0 0 0 .5px rgba(255,255,255,.12), 0 24px 50px -24px rgba(0,0,0,.8); overflow-y: auto; overscroll-behavior: contain;
+    transition: transform 420ms var(--ease-drawer), opacity 260ms ease; }
+  body.sinPanel .panel { transform: translateX(calc(100% + 24px)); opacity: 0; pointer-events: none; }
+  .vtools, .sep { transition: right 420ms var(--ease-drawer); }
+  body:not(.sinPanel) .vtools, body:not(.sinPanel) .sep { right: 364px; }
+}
+/* teléfono: el panel es una hoja que sube desde abajo (baja, media o completa) y el 3D usa lo que queda arriba */
+@media (max-width: 979px) {
+  .viewer { position: absolute; left: 0; right: 0; top: 0; bottom: 50%; height: auto; min-height: 0; box-shadow: none; z-index: 1; }
+  .panel { position: absolute; left: 0; right: 0; bottom: 0; height: calc(100% - 44px); z-index: 5; padding: 0 12px calc(24px + env(safe-area-inset-bottom, 0px)); gap: 6px;
+    overflow-y: auto; overscroll-behavior: contain; border-radius: 22px 22px 0 0; background: rgba(8,28,62,.96);
+    box-shadow: inset 0 .5px 0 rgba(255,255,255,.16), 0 -16px 40px -16px rgba(0,0,0,.7); transform: translateY(50%); transition: transform 460ms var(--ease-drawer); will-change: transform; }
+  .panel.arrastra { transition: none; }
+  .asa { position: sticky; top: 0; z-index: 2; flex: none; margin: 0 -12px; padding: 10px 12px 8px; background: rgba(8,28,62,.98); border-radius: 22px 22px 0 0; touch-action: none; cursor: grab; }
+  .asa i { display: block; width: 40px; height: 5px; margin: 0 auto; border-radius: 3px; background: rgba(255,255,255,.3); }
+  #vPanel { display: none; }
+  .rail button { width: 42px; height: 42px; }
+  /* en el teléfono las herramientas van en una fila abajo, para no tapar el 3D */
+  .rail { top: auto; bottom: 58px; flex-direction: row; padding: 4px; }
+  .rail hr { width: 1px; height: auto; margin: 6px 2px; }
+  .vtools { left: 52px; }
+  .hud div { font-size: 16px; padding: 5px 10px; }
+  .sep { width: min(38%, 160px); }
+}
+@media (min-width: 980px) { .asa { display: none; } }
+@media (prefers-reduced-motion: reduce) { .cuerpo, .cabBtn .chev, .panel, .vtools, .sep { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .bar i, .seg button, .btn, .field .badge { transition: none; } }
+@media (prefers-reduced-transparency: reduce) {
+  .chip, .vtools .btn.ghost, .vtools .seg, .sep, .hud div, .help, .planbar, .cotain label { background: var(--card-2); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
 </style>
 <script>/* vista del cliente desde el primer instante: así no se alcanza a ver el diseñador al abrir o recargar */ if (/[?&]cliente=1(&|$)/.test(location.search)) document.documentElement.classList.add('cliente');</script>
 
@@ -199,6 +349,7 @@ details p { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
     <div class="labels" id="labels"></div>
     <div class="labels" id="dlabels"></div>
     <div class="labels" id="llabels"></div>
+    <div class="labels" id="xlabels"></div>
     <div class="help">Arrastra para girar · pellizca o rueda para acercar</div>
     <div class="vtools">
       <div class="seg" role="group" aria-label="Vista">
@@ -208,7 +359,20 @@ details p { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
       <button type="button" class="btn ghost" id="cotas" aria-pressed="false">Cotas</button>
       <button type="button" class="btn ghost" id="verLocal" aria-pressed="true" hidden>Local</button>
       <button type="button" class="btn ghost" id="fit">Centrar</button>
+      <button type="button" class="btn ghost" id="vPanel" aria-pressed="true" aria-label="Mostrar u ocultar las opciones" title="Mostrar u ocultar las opciones"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M15 4.5v15"/></svg></button>
     </div>
+    <button type="button" class="undo3" id="undo3" disabled aria-label="Deshacer el último cambio" title="Deshacer el último cambio"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg></button>
+    <nav class="rail" aria-label="Herramientas">
+      <button type="button" id="rDibujar" aria-pressed="false" aria-label="Dibujar la cava en 3D" title="Dibujar la cava en 3D"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-11 10 4-4 9z"/><circle cx="4" cy="17" r="1.6" fill="currentColor"/><circle cx="10" cy="6" r="1.6" fill="currentColor"/><circle cx="20" cy="10" r="1.6" fill="currentColor"/></svg></button>
+      <hr>
+      <button type="button" id="rSala" class="sala" aria-pressed="false" aria-label="Sala adyacente: desde una pared, hacia afuera" title="Sala adyacente: desde una pared, hacia afuera"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="11" height="14" rx="1.5"/><path d="M13.5 9h7.5v9h-7.5" stroke-dasharray="2.6 2"/></svg></button>
+      <button type="button" id="rDiv" aria-label="Pared divisoria (dentro de la cava)" title="Pared divisoria (dentro de la cava)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M12 4.5v15"/></svg></button>
+      <button type="button" id="rCol" aria-label="Columna suelta" title="Columna suelta"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="8" height="8" rx="1"/><path d="M3 3h18v18H3z" stroke-opacity="0.4"/></svg></button>
+      <button type="button" id="rEtq" aria-label="Etiqueta de espacio" title="Etiqueta de espacio"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.4"/></svg></button>
+      <hr>
+      <button type="button" id="rPlanta" aria-label="Planta vista desde arriba" title="Planta vista desde arriba"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 10h7v10"/></svg></button>
+    </nav>
+    <div class="salaBar" id="salaBar" hidden role="status"><span id="salaTxt">Toca un punto de una pared y arrastra hacia afuera</span><button type="button" class="btn sm" id="salaCancel">Cancelar</button></div>
     <label class="sep" for="sep">Separar<input type="range" id="sep" min="0" max="1" step="0.05" value="0" aria-label="Separar piezas"></label>
     <div class="hud">
       <div><small>Volumen</small><span id="h-vol">–</span></div>
@@ -237,6 +401,7 @@ details p { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
           <button type="button" class="btn ghost sm" data-preset="col">Con columna</button>
           <button type="button" class="btn ghost sm" data-preset="U">En U</button>
           <button type="button" class="btn sm" id="draw">Dibujar desde cero</button>
+          <button type="button" class="btn sm" id="draw3dIni">Dibujar en 3D</button>
         </div>
         <div class="row"><span>Largo de cada muro</span><div class="wlist" id="wallList"></div></div>
         <p class="note">Largos por fuera. Al cambiar el largo de un muro, todo lo que está más allá de su esquina final se corre junto, así los ángulos rectos se mantienen.</p>
@@ -272,25 +437,33 @@ details p { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
             <label class="num"><span>Largo (por dentro)</span><input id="dLen" inputmode="decimal" placeholder="0,00" aria-label="Largo del muro en metros"><span>m</span></label>
             <span class="flechas"><button type="button" class="btn ghost sm" data-dir="u" aria-label="Hacia arriba">↑</button><button type="button" class="btn ghost sm" data-dir="d" aria-label="Hacia abajo">↓</button><button type="button" class="btn ghost sm" data-dir="l" aria-label="Hacia la izquierda">←</button><button type="button" class="btn ghost sm" data-dir="r" aria-label="Hacia la derecha">→</button></span>
           </div>
-          <span class="actions"><button type="button" class="btn ghost sm" id="undoPt">Quitar última</button><button type="button" class="btn sm" id="closeShape">Cerrar forma</button><button type="button" class="btn ghost sm" id="cancelDraw">Cancelar</button></span>
+          <span class="actions"><button type="button" class="btn ghost sm" id="draw3d">Dibujar en 3D</button><button type="button" class="btn ghost sm" id="undoPt">Quitar última</button><button type="button" class="btn sm" id="closeShape">Cerrar forma</button><button type="button" class="btn ghost sm" id="cancelDraw">Cancelar</button></span>
+        </div>
+        <div class="planbar" id="divBar" hidden>
+          <span>Toca donde va la pared divisoria: va de muro a muro. Puedes arrastrar antes de soltar.</span>
+          <span class="actions"><button type="button" class="btn sm" id="divGirar" title="Girar (tecla R)">⟳ Girar</button><button type="button" class="btn ghost sm" id="divCancel">Cancelar</button></span>
         </div>
       </div>
       <div class="salasInfo" id="salasInfo" hidden></div>
       <p class="note planley"><span style="color:#c9d3e2">■ Blanco: medida por fuera</span> · <span style="color:#ffb184">■ Naranja: medida por dentro</span> · <span style="color:#7fe3f0">■ Celeste: medidas de cada sala</span></p>
       <p class="note" id="planHint">Arrastra columnas y extremos de las divisiones para moverlos. En polígono también puedes arrastrar las esquinas y tocar un + para agregar una.</p>
       <p class="alert" id="planErr" hidden></p>
+      <p class="grupo">Dentro de la cava</p>
       <div class="actions">
         <button type="button" class="btn ghost sm" id="addPCol">+ Columna en pared</button>
         <button type="button" class="btn ghost sm" id="addCol">+ Columna suelta</button>
         <button type="button" class="btn ghost sm" id="addDiv">+ Pared divisoria</button>
         <button type="button" class="btn ghost sm" id="addEtq">+ Etiqueta de espacio</button>
+        <button type="button" class="btn ghost sm" id="addEq">+ Difusor y unidad</button>
       </div>
       <div id="pcolList" class="xlist"></div>
       <p class="note" id="pcolNote" hidden>Columnas en pared: las de la obra, metidas en los muros donde se instala la cava. Medidas reales de la columna (por fuera del panel). Arrástrala en la planta para correrla y usa el punto naranja para cambiar su tamaño.</p>
       <div id="colList" class="xlist"></div>
       <div id="divList" class="xlist"></div>
       <div id="etqList" class="xlist"></div>
-      <div class="actions"><button type="button" class="btn ghost sm" id="addSala">+ Sala o cajón adyacente</button></div>
+      <div id="eqList" class="xlist"></div>
+      <p class="grupo fuera">Fuera de la cava</p>
+      <div class="actions"><button type="button" class="btn sm salaBtn" id="dibSala">Dibujar sala adyacente</button><button type="button" class="btn ghost sm" id="addSala">+ Sala o cajón adyacente</button></div>
       <div id="salaList" class="xlist"></div>
       <p class="note">La sala se pega por fuera del muro elegido y comparte ese muro con la cava. Puede tener su propio alto, ancho y fondo.</p>
     </div>
@@ -326,6 +499,10 @@ details p { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
         <label class="row"><span>Distancia a la esquina izquierda</span><div class="num"><input id="d-dist" inputmode="decimal" aria-label="Distancia de la puerta a la esquina izquierda del muro, vista desde afuera"><span>m</span></div></label>
         <div class="row"><span>Hasta la esquina derecha</span><div class="num ro"><b id="d-otra">–</b><span>m</span></div></div>
       </div>
+      <div class="row"><span>Tipo de puerta</span>
+        <div class="seg" id="d-tipo" role="group" aria-label="Tipo de puerta"><button type="button" data-v="bat">Batiente</button><button type="button" data-v="corr">Corrediza</button></div>
+      </div>
+      <div class="row"><span>Apertura<b class="abTxt" id="d-ab-txt">Cerrada</b></span><input type="range" id="d-ab" min="0" max="1" step="0.05" value="0" aria-label="Qué tan abierta está la puerta"></div>
       <div class="row"><span>Posición en el muro</span><input type="range" id="d-pos" min="0" max="1" step="0.01" aria-label="Posición de la puerta"></div>
       <div class="two">
         <label class="row"><span id="d-bis-lab">Bisagra (vista desde afuera)</span>
@@ -348,10 +525,32 @@ function iniciar3D() {
   'use strict';
   // ---- Integración con la calculadora / app Android ----
   var Q = new URLSearchParams(location.search), PID = Q.get('p') || '';
-  var EMB = Q.get('emb') === '1';
-  // vista para el cliente (enlace o QR): solo mirar, sin botones ni cambios; el diseño viaja en el enlace (c=)
+  var EMB = Q.get('emb') === '1';                             // dentro de la pestaña 3D de la calculadora (no basta con estar en un marco: la página publicada también vive en uno)
+  // pantalla completa en la app publicada: sin cuenta activa o con la prueba vencida vuelve a la app, que pide entrar
+  // (dentro de la pestaña 3D eso lo hace la calculadora)
+  // vista para el cliente (enlace o QR): solo mirar, sin cuenta, sin botones ni cambios; el diseño viaja en el enlace (z= comprimido, o c=)
   var CLI = Q.get('cliente') === '1';
-  if (CLI) document.documentElement.classList.add('cliente');                             // dentro de la pestaña 3D de la calculadora (no basta con estar en un marco: la página publicada también vive en uno)
+  if (CLI) document.documentElement.classList.add('cliente');
+  if (!EMB && !CLI && location.protocol === 'https:' && location.hostname !== 'localhost') {
+    var revisarAcceso = function () {
+      try {
+        var c = JSON.parse(localStorage.getItem('pandoraCuenta') || 'null'), ahora = Date.now();
+        var fin = c && c.vence && (ahora >= Date.parse(c.vence) || (c.visto && ahora < c.visto - 36e5));
+        if (!c || !c.token || fin) location.replace('index.html');
+      } catch (e) {}
+    };
+    // con internet, además pregunta al servidor si la cuenta sigue activa (borrada o cambiada en el panel)
+    var preguntarCuenta = function () {
+      try {
+        var c = JSON.parse(localStorage.getItem('pandoraCuenta') || 'null');
+        if (!c || !c.token || !navigator.onLine) return;
+        fetch('/api/pandora/yo', { headers: { Authorization: c.token }, cache: 'no-store' })
+          .then(function (r) { if (r.status === 401 || r.status === 403) location.replace('index.html'); }, function () {});
+      } catch (e) {}
+    };
+    revisarAcceso(); preguntarCuenta();
+    setInterval(revisarAcceso, 15000); setInterval(preguntarCuenta, 30000);
+  }
   var LOW = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || !!window.Android; // teléfono: modo liviano
   var KEY3D = CLI ? 'pandora-vista-cliente' : PID ? 'pandora-cava-3d:' + PID : 'pandora-cava-2';
   var SEG = LOW ? 12 : 28;
@@ -360,16 +559,17 @@ function iniciar3D() {
   var PANELES = { PUR: { k: 0.022, n: 'Poliuretano' }, EPS: { k: 0.036, n: 'Poliestireno expandido' } };
   var PUERTAS = { '0.9x2.1': { w: 0.9, h: 2.1, n: 'peatonal 0,9 × 2,1 m', mont: false }, '1.2x2.1': { w: 1.2, h: 2.1, n: 'para transpaleta 1,2 × 2,1 m', mont: false }, '1.8x2.5': { w: 1.8, h: 2.5, n: 'corrediza 1,8 × 2,5 m', mont: false }, '2.4x3.0': { w: 2.4, h: 3.0, n: 'para montacargas 2,4 × 3,0 m', mont: true } };
 
-  var DEF = { forma: 'rect', pts: null, L: 6, W: 4, H: 3, panel: 'EPS', esp: 100, dEdge: 0, tam: '1.2x2.1', pos: 0.25, cortina: true, doors: null, salas: [], vista: 'ext', cotas: false, sep: 0, losa: true, abierta: false, cols: [], divs: [] };
+  // batiente o corrediza: si no se eligió, la de más de 1,3 m de ancho es corrediza (como antes)
+  function tipoPuerta(d) { return d.tipo === 'bat' || d.tipo === 'corr' ? d.tipo : ((PUERTAS[d.tam] || PUERTAS['1.2x2.1']).w > 1.3 ? 'corr' : 'bat'); }
+  var DEF = { forma: 'rect', pts: null, L: 6, W: 4, H: 3, panel: 'EPS', esp: 100, dEdge: 0, tam: '1.2x2.1', pos: 0.25, cortina: true, doors: null, salas: [], vista: 'ext', cotas: false, sep: 0, losa: true, abierta: false, cols: [], divs: [], equipos: [] };
   var S = Object.assign({}, DEF);
-  function leerEnlace() { var c = (Q.get('c') || '').replace(/-/g, '+').replace(/_/g, '/'); return c ? JSON.parse(decodeURIComponent(escape(atob(c)))) : null; }
-  try { var saved = CLI ? leerEnlace() : JSON.parse(localStorage.getItem(KEY3D) || 'null'); if (saved) Object.keys(DEF).forEach(function (k) { if (saved[k] !== undefined) S[k] = saved[k]; }); } catch (e) {}
+  try { var saved = CLI ? window.__disenoCliente : JSON.parse(localStorage.getItem(KEY3D) || 'null'); if (saved) Object.keys(DEF).forEach(function (k) { if (saved[k] !== undefined) S[k] = saved[k]; }); } catch (e) {}
   if (CLI) { S.vista = 'ext'; S.cotas = false; S.sep = 0; }
   if (!PUERTAS[S.tam]) S.tam = DEF.tam;
   // varias puertas: se pasa la puerta única de antes a la lista
   if (!Array.isArray(S.doors) || !S.doors.length) S.doors = [{ e: S.dEdge || 0, tam: S.tam, pos: S.pos, cortina: S.cortina, bis: 'der', sent: 'afuera' }];
-  S.doors = S.doors.filter(function (d) { return d && isFinite(d.e); }).map(function (d) { return { e: d.e | 0, tam: PUERTAS[d.tam] ? d.tam : '1.2x2.1', pos: isFinite(d.pos) ? d.pos : 0.5, cortina: !!d.cortina, bis: d.bis === 'izq' ? 'izq' : 'der', sent: d.sent === 'adentro' ? 'adentro' : 'afuera' }; });
-  if (!S.doors.length) S.doors = [{ e: 0, tam: '1.2x2.1', pos: 0.25, cortina: true, bis: 'der', sent: 'afuera' }];
+  S.doors = S.doors.filter(function (d) { return d && isFinite(d.e); }).map(function (d) { return { e: d.e | 0, tam: PUERTAS[d.tam] ? d.tam : '1.2x2.1', pos: isFinite(d.pos) ? d.pos : 0.5, cortina: !!d.cortina, bis: d.bis === 'izq' ? 'izq' : 'der', sent: d.sent === 'adentro' ? 'adentro' : 'afuera', tipo: tipoPuerta(d), ab: Math.min(Math.max(+d.ab || 0, 0), 1) }; });
+  if (!S.doors.length) S.doors = [{ e: 0, tam: '1.2x2.1', pos: 0.25, cortina: true, bis: 'der', sent: 'afuera', tipo: 'bat', ab: 0 }];
   if (!Array.isArray(S.salas)) S.salas = [];
   if (!Array.isArray(S.cols)) S.cols = [];
   if (!Array.isArray(S.divs)) S.divs = [];
@@ -377,6 +577,9 @@ function iniciar3D() {
   S.divs = S.divs.filter(function (v) { return v && Array.isArray(v.a) && Array.isArray(v.b); });
   if (!Array.isArray(S.etq)) S.etq = [];
   S.etq = S.etq.filter(function (e) { return e && isFinite(e.x) && isFinite(e.z); });
+  // equipos de frío (solo para ver): difusor en una pared y su unidad condensadora por fuera
+  if (!Array.isArray(S.equipos)) S.equipos = [];
+  S.equipos = S.equipos.filter(function (q) { return q && isFinite(q.e) && isFinite(q.u) && isFinite(q.cx) && isFinite(q.cz) && q.L > 0 && q.H > 0 && q.F > 0; });
   if (Q.get('extras') === '0') { S.cols = []; S.divs = []; S.salas = []; S.etq = []; }
   var TP = (qn('espPiso') || 10) / 100; // espesor del anime del piso (m)
   if (!validPts(S.pts)) { S.pts = null; if (S.forma === 'poli') S.forma = 'rect'; }
@@ -484,7 +687,7 @@ function iniciar3D() {
     var w = Math.min(P.w, Math.max(E.len - 2 * m, 0.6)), h = Math.min(P.h, S.H - 0.3);
     var uc = m + w / 2 + D.pos * Math.max(E.len - 2 * m - w, 0);
     if (w > E.len - 0.1) { w = Math.max(E.len - 0.2, 0.2); uc = E.len / 2; }
-    return { w: w, h: h, u0: uc - w / 2, u1: uc + w / 2, uc: uc, sliding: w > 1.3, edge: E, bis: D.bis, sent: D.sent, cortina: D.cortina };
+    return { w: w, h: h, u0: uc - w / 2, u1: uc + w / 2, uc: uc, sliding: tipoPuerta(D) === 'corr', ab: D.ab || 0, edge: E, bis: D.bis, sent: D.sent, cortina: D.cortina };
   }
   function puerta(G) { return doorGeom(G, curDoor()); }  // la puerta que se está editando
   // huecos de un muro: sus puertas y las puertas hacia las salas pegadas a él
@@ -502,8 +705,10 @@ function iniciar3D() {
   var viewer = $('viewer'), labelsEl = $('labels');
   var renderer = new THREE.WebGLRenderer({ antialias: !LOW || (window.devicePixelRatio || 1) < 2, alpha: true, powerPreference: LOW ? 'low-power' : 'default' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOW ? 1.5 : 2));
-  renderer.shadowMap.enabled = !LOW; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.shadowMap.enabled = !LOW; renderer.shadowMap.type = THREE.PCFShadowMap;   // en three.js nuevo ya es la sombra suave
+  // three.js nuevo: los colores se usan tal cual (como en la versión anterior) y la salida va en sRGB
+  THREE.ColorManagement.enabled = false;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   viewer.insertBefore(renderer.domElement, viewer.firstChild);
   renderer.domElement.setAttribute('aria-label', 'Vista 3D girable de la cava');
   var scene = new THREE.Scene();
@@ -511,11 +716,13 @@ function iniciar3D() {
   var controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enableDamping = !LOW; controls.dampingFactor = 0.08; controls.maxPolarAngle = Math.PI / 2 - 0.03; controls.minDistance = CLI ? 0.4 : 2; controls.maxDistance = 150;
 
-  scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x0b1a33, 0.75));
-  var sun = new THREE.DirectionalLight(0xffffff, 0.95);
+  // las luces ahora son físicas: × π da la misma luz que antes
+  var LUZ = Math.PI * 1.04;
+  scene.add(new THREE.HemisphereLight(0xdfe9ff, 0x0b1a33, 0.75 * LUZ));
+  var sun = new THREE.DirectionalLight(0xffffff, 0.95 * LUZ);
   sun.castShadow = !LOW; sun.shadow.mapSize.set(LOW ? 1024 : 2048, LOW ? 1024 : 2048); sun.shadow.bias = -0.0004;
   scene.add(sun); scene.add(sun.target);
-  var fillL = new THREE.DirectionalLight(0x9cc2ff, 0.35); fillL.position.set(-20, 12, -10); scene.add(fillL);
+  var fillL = new THREE.DirectionalLight(0x9cc2ff, 0.35 * LUZ); fillL.position.set(-20, 12, -10); scene.add(fillL);
   var ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.ShadowMaterial({ opacity: 0.32 }));
   ground.rotation.x = -Math.PI / 2; ground.position.y = -TP - 0.121; ground.receiveShadow = true; scene.add(ground);
   var grid = new THREE.GridHelper(120, 120, 0x2b5288, 0x173763); grid.position.y = -TP - 0.12; grid.material.transparent = true; grid.material.opacity = 0.45; scene.add(grid);
@@ -552,7 +759,8 @@ function iniciar3D() {
     box(0.07, d.h + 0.07, fd, mats.frame, d.u1 + 0.035, (d.h + 0.07) / 2, fz, g);
     box(d.w + 0.14, 0.07, fd, mats.frame, d.uc, d.h + 0.035, fz, g);
     if (d.sliding) {
-      var off = S.abierta ? d.w * 0.95 * (izq ? -1 : 1) : 0;
+      // apertura de la puerta (0 cerrada, 1 abierta); 'Mostrar todas las puertas abiertas' las abre todas
+      var off = d.w * 0.95 * Math.max(d.ab || 0, S.abierta ? 1 : 0) * (izq ? -1 : 1);
       box(d.w + 0.16, d.h + 0.04, 0.09, mats.leaf, d.uc + off, (d.h + 0.04) / 2, zBase + fd + 0.05, g);
       var railLen = 2 * d.w + 0.4;
       box(railLen, 0.07, 0.07, mats.inox, izq ? d.u1 + 0.2 - railLen / 2 : d.u0 - 0.2 + railLen / 2, d.h + 0.13, zBase + fd + 0.05, g);
@@ -565,7 +773,8 @@ function iniciar3D() {
       var cara = dentro ? t * 0.9 : 0;   // manilla en la cara de afuera de la hoja
       box(0.06, 0.28, 0.06, mats.inox, sx * (d.w - 0.14), 1.05, cara + 0.03, pv);
       box(0.12, 0.2, 0.03, mats.inox, sx * (d.w - 0.14), 1.05, cara + 0.015, pv);
-      if (S.abierta) pv.rotation.y = (izq ? -1 : 1) * (dentro ? -1 : 1) * Math.PI / 2 * 0.85;
+      var abre = Math.max(d.ab || 0, S.abierta ? 0.85 : 0);
+      if (abre) pv.rotation.y = (izq ? -1 : 1) * (dentro ? -1 : 1) * Math.PI / 2 * abre;
     }
   }
   // tramos de panel de un muro con varios huecos de puerta (de suelo a techo entre huecos, y encima de cada hueco)
@@ -661,12 +870,19 @@ function iniciar3D() {
   }
   function buildSala(G, sa) {
     var E = G.ed[sa.e]; if (!E) return;
-    var t = S.esp / 1000, H2 = sa.h, u0 = sa.u0, W = sa.w, D = sa.d, g = frameAt(E), mats = wallMats();
+    var t = S.esp / 1000, H2 = sa.h, u0 = sa.u0, W = sa.w, D = sa.d, g = frameAt(E);
+    // un material por muro: en "Ver por dentro" se vuelven transparentes los que dan hacia la cámara, como los de la cava
+    var mL = wallMats(), mR = wallMats(), mats = wallMats();
     var fo = new THREE.Group(), fi = new THREE.Group(), techo = new THREE.Group(), piso = new THREE.Group(); g.add(fo); g.add(fi); g.add(techo); g.add(piso);
-    g.userData = { normal: new THREE.Vector3(E.n[0], 0, E.n[1]), base: g.position.clone(), fo: fo, fi: fi, techo: techo, piso: piso };
+    var pt = function (u, z) { return new THREE.Vector3(E.a[0] + E.e[0] * u + E.n[0] * z, H2 / 2, E.a[1] + E.e[1] * u + E.n[1] * z); };
+    var paredes = [
+      { mats: mL, n: new THREE.Vector3(-E.e[0], 0, -E.e[1]), c: pt(u0 - t / 2, t + D / 2) },
+      { mats: mR, n: new THREE.Vector3(E.e[0], 0, E.e[1]), c: pt(u0 + W + t / 2, t + D / 2) },
+      { mats: mats, n: new THREE.Vector3(E.n[0], 0, E.n[1]), c: pt(u0 + W / 2, 1.5 * t + D) }];
+    g.userData = { normal: new THREE.Vector3(E.n[0], 0, E.n[1]), base: g.position.clone(), fo: fo, fi: fi, techo: techo, piso: piso, paredes: paredes };
     // lados (a lo largo de z) y fondo (a lo largo de x); la cara exterior queda hacia afuera de la sala
-    tramoRecto(g, 'z', t, 2 * t + D, u0 - t, u0, H2, null, mats, fo, fi, -1);
-    tramoRecto(g, 'z', t, 2 * t + D, u0 + W, u0 + W + t, H2, null, mats, fo, fi, 1);
+    tramoRecto(g, 'z', t, 2 * t + D, u0 - t, u0, H2, null, mL, fo, fi, -1);
+    tramoRecto(g, 'z', t, 2 * t + D, u0 + W, u0 + W + t, H2, null, mR, fo, fi, 1);
     var hExt = null;
     if (sa.pExt) { var w = Math.min(0.9, W - 0.2), h = Math.min(2.1, H2 - 0.3); if (w >= 0.5) hExt = [{ u0: t + W / 2 - w / 2, u1: t + W / 2 + w / 2, h: h, w: w }]; }
     tramoRecto(g, 'x', u0 - t, u0 + W + t, t + D, 2 * t + D, H2, hExt, mats, fo, fi, 1);
@@ -819,6 +1035,7 @@ function iniciar3D() {
     buildCeiling(G); buildTrims(G); buildFloor(G);
     divG = new THREE.Group(); root.add(divG); S.divs.forEach(buildDiv);
     colG = new THREE.Group(); root.add(colG); buildCols();
+    eqG = new THREE.Group(); root.add(eqG); buildEquipos();
     salasG = []; S.salas.forEach(function (sa) { buildSala(G, sa); });
     buildDims(G); buildLocal();
     var bb = G.bb; root.position.set(-(bb.x0 + bb.x1) / 2, 0, -(bb.z0 + bb.z1) / 2);
@@ -844,6 +1061,18 @@ function iniciar3D() {
       });
       g.children.forEach(function (c) { c.castShadow = !facing; });
     });
+    // salas adyacentes: sin techo y con transparentes los muros que tapan la vista hacia adentro
+    salasG.forEach(function (g) {
+      var u = g.userData; if (u.techo) u.techo.visible = !inside;
+      (u.paredes || []).forEach(function (p) {
+        tmpV.copy(camera.position).sub(root.position).sub(p.c);
+        var facing = inside && p.n.dot(tmpV) > 0;
+        Object.keys(p.mats).forEach(function (mk) {
+          var m = p.mats[mk], want = facing ? 0.13 : 1;
+          if (m.opacity !== want) { m.transparent = facing; m.opacity = want; m.depthWrite = !facing; m.needsUpdate = true; }
+        });
+      });
+    });
   }
   function fitView() {
     var bb = GEO ? GEO.bb : { w: S.L, d: S.W };
@@ -853,7 +1082,13 @@ function iniciar3D() {
     camera.position.copy(new THREE.Vector3(1, 0.72, 1.3).normalize().multiplyScalar(dist)).add(controls.target);
     controls.update();
   }
-  function resize() { var w = viewer.clientWidth, h = viewer.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / Math.max(h, 1); camera.updateProjectionMatrix(); pedir(); }
+  function resize() {
+    var w = viewer.clientWidth, h = viewer.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / Math.max(h, 1);
+    // laptop con el panel abierto: el centro de la vista se corre a la izquierda, al espacio que el panel deja libre
+    var corre = window.innerWidth >= 980 && !document.body.classList.contains('sinPanel') ? Math.min(176, w * 0.25) : 0;
+    if (corre) camera.setViewOffset(w, h, corre, 0, w, h); else camera.clearViewOffset();
+    camera.updateProjectionMatrix(); pedir();
+  }
   window.addEventListener('resize', resize);
 
   var active = null;
@@ -905,7 +1140,7 @@ function iniciar3D() {
   var lastView = '';
   function frame() {
     if (S.vista === 'int') { var key = camera.position.x.toFixed(1) + camera.position.z.toFixed(1); if (key !== lastView) { lastView = key; applyView(); } }
-    placeLabels(); placeDoorLabels(); placeLocalLabels(); renderer.render(scene, camera);
+    placeLabels(); placeDoorLabels(); placeLocalLabels(); placeDib3Labels(); placeSalaLabels(); renderer.render(scene, camera);
   }
   // en teléfono solo se dibuja cuando algo cambia (ahorra batería); en computadora, animación continua con inercia
   var pend = false;
@@ -969,13 +1204,14 @@ function iniciar3D() {
 
   // ---------- Editor de planta (SVG) ----------
   var NS = 'http://www.w3.org/2000/svg', plan = $('plan');
-  var ed = { sel: -1, drag: -1, vb: null, drawing: false, draft: [], hover: null, err: '', obj: null, selCol: -1, selDiv: -1, selSala: -1, selPC: -1, selEtq: -1, selMuro: -1 };
+  var ed = { sel: -1, drag: -1, vb: null, drawing: false, draft: [], hover: null, err: '', obj: null, selCol: -1, selDiv: -1, selSala: -1, selPC: -1, selEtq: -1, selMuro: -1, selEq: -1 };
   function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); }); (parent || plan).appendChild(e); return e; }
   function planPts() { return S.forma === 'poli' && validPts(S.pts) ? S.pts : rectPts(S.L, S.W); }
   function computeVB() {
     var pts = ed.drawing ? (ed.draft.length ? ed.draft.slice() : [[0, 0], [5, 4]]) : planPts().slice();
     if (ed.drawing) { var bd = bbox(pts), cx0 = (bd.x0 + bd.x1) / 2, cz0 = (bd.z0 + bd.z1) / 2, mw = Math.max(bd.w, 4) / 2 + 1, md = Math.max(bd.d, 4) / 2 + 1; pts.push([cx0 - mw, cz0 - md], [cx0 + mw, cz0 + md]); }
     if (!ed.drawing && GEO) S.salas.forEach(function (sa) { var Es = GEO.ed[sa.e]; if (!Es) return; var o = 2 * S.esp / 1000 + sa.d; [[sa.u0, o], [sa.u0 + sa.w, o]].forEach(function (q) { pts.push([Es.a[0] + Es.e[0] * q[0] + Es.n[0] * q[1], Es.a[1] + Es.e[1] * q[0] + Es.n[1] * q[1]]); }); });
+    if (!ed.drawing && GEO) S.equipos.forEach(function (q) { var f = condPie(q); pts.push([f.x0, f.z0], [f.x1, f.z1]); });
     var b = bbox(pts), pad = Math.max(1.2, Math.max(b.w, b.d) * 0.16);
     var w = b.w + 2 * pad, h = b.d + 2 * pad, bx = plan.getBoundingClientRect(), ar = (bx.width || 360) / (bx.height || 300);
     if (w / h < ar) { var nw = h * ar; b.x0 -= (nw - w) / 2; w = nw; } else { var nh = w / ar; b.z0 -= (nh - h) / 2; h = nh; }
@@ -993,8 +1229,10 @@ function iniciar3D() {
   function snap(v) { return Math.round(v / 0.05) * 0.05; }
   function align(p, others, tol) { var x = p[0], z = p[1], bx = tol, bz = tol; others.forEach(function (o) { if (Math.abs(o[0] - p[0]) < bx) { bx = Math.abs(o[0] - p[0]); x = o[0]; } if (Math.abs(o[1] - p[1]) < bz) { bz = Math.abs(o[1] - p[1]); z = o[1]; } }); return [r2(x), r2(z)]; }
 
+  function caben(v) { var m = Math.min(v[2], v[3]) * 0.06; return ed.draft.every(function (q) { return q[0] > v[0] + m && q[0] < v[0] + v[2] - m && q[1] > v[1] + m && q[1] < v[1] + v[3] - m; }); }
   function drawPlan() {
-    if (ed.mvb) ed.vb = ed.mvb; else if (!ed.vb || (ed.drag < 0 && !ed.obj)) ed.vb = computeVB();
+    // al dibujar, la vista se queda quieta mientras las esquinas quepan (si se moviera, el siguiente toque caería en otro lado)
+    if (ed.mvb) ed.vb = ed.mvb; else if (ed.drawing && ed.vb && caben(ed.vb)) { /* misma vista */ } else if (!ed.vb || (ed.drag < 0 && !ed.obj)) ed.vb = computeVB();
     // tamaños en píxeles de pantalla: los puntos y letras no crecen aunque la cava sea grande
     var vb = ed.vb, ext = Math.max(vb[2], vb[3]), px = vb[2] / Math.max(plan.clientWidth || 360, 1), span = px * 420, fs = px * 11.5, rv = px * 5.5, HIT = px * 17;
     plan.setAttribute('viewBox', vb.join(' ')); plan.setAttribute('preserveAspectRatio', 'xMidYMid meet');
@@ -1015,7 +1253,7 @@ function iniciar3D() {
       // largo de cada muro ya dibujado
       for (var di = 1; di < dp.length; di++) { var qa2 = dp[di - 1], qb2 = dp[di], ll2 = Math.hypot(qb2[0] - qa2[0], qb2[1] - qa2[1]); if (ll2 > 0.05) { var tl = el('text', { x: (qa2[0] + qb2[0]) / 2, y: (qa2[1] + qb2[1]) / 2 - fs * 0.9, 'font-size': fs, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#fff', 'paint-order': 'stroke', stroke: 'var(--card-2)', 'stroke-width': px * 3 }); tl.textContent = nf(ll2, 2) + ' m'; } }
       if (dp.length && ed.hover) { var ll = Math.hypot(ed.hover[0] - dp[dp.length - 1][0], ed.hover[1] - dp[dp.length - 1][1]); if (ll > 0.05) lbl([(ed.hover[0] + dp[dp.length - 1][0]) / 2, (ed.hover[1] + dp[dp.length - 1][1]) / 2 - fs], nf(ll, 2) + ' m', '#fff'); }
-      cotasEd = []; ponerCotasEditables();
+      cotasEd = []; ponerCotasEditables(); pintarDib3();
       return;
     }
     var P = planPts(), G = GEO, n = P.length, poli = S.forma === 'poli', editaCotas = poli && !ed.drawing;
@@ -1111,11 +1349,60 @@ function iniciar3D() {
         el('circle', { cx: q[0], cy: q[1], r: rv * 0.95, fill: sel ? 'var(--orange)' : '#fff', stroke: 'var(--orange)', 'stroke-width': span * 0.004 }, h);
       });
     });
+    // pared divisoria por poner: se ve dónde queda, de muro a muro, con el espacio libre a cada lado
+    if (ed.ponDiv && ed.ponDiv.p) {
+      var pd = ed.ponDiv, sgm = tramoDiv(pd.p, pd.o, -1);
+      if (sgm) {
+        var hv = S.esp / 2000, nrm = pd.o === 'h' ? [0, 1] : [1, 0];
+        el('line', { x1: sgm.a[0], y1: sgm.a[1], x2: sgm.b[0], y2: sgm.b[1], stroke: 'var(--orange)', 'stroke-width': Math.max(S.esp / 1000, span * 0.008), opacity: 0.85 });
+        [-1, 1].forEach(function (sg) {
+          var dd = hastaCara(pd.p, [nrm[0] * sg, nrm[1] * sg], -1); if (dd === null) return;
+          var q0 = [pd.p[0] + nrm[0] * sg * hv, pd.p[1] + nrm[1] * sg * hv], q1 = [pd.p[0] + nrm[0] * sg * dd, pd.p[1] + nrm[1] * sg * dd];
+          el('line', { x1: q0[0], y1: q0[1], x2: q1[0], y2: q1[1], stroke: '#ffd166', 'stroke-width': px * 1.2, 'stroke-dasharray': px * 4 + ' ' + px * 3 });
+          lbl([(q0[0] + q1[0]) / 2 + nrm[1] * fs * 1.8, (q0[1] + q1[1]) / 2 + nrm[0] * fs * 1.8], nf(dd - hv, 2), '#ffd166', fs * 0.85);
+        });
+        lbl([sgm.a[0] * 0.8 + sgm.b[0] * 0.2 - nrm[0] * fs * 1.2, sgm.a[1] * 0.8 + sgm.b[1] * 0.2 - nrm[1] * fs * 1.2], nf(Math.hypot(sgm.b[0] - sgm.a[0], sgm.b[1] - sgm.a[1]), 2) + ' m', 'var(--orange)', fs * 0.85);
+      } else el('circle', { cx: pd.p[0], cy: pd.p[1], r: rv, fill: '#ff6b6b' });   // fuera de la cava: ahí no se puede
+    }
+    // pared divisoria elegida: botón redondo para girarla 90° (a un cuarto del largo: al centro van los recuadros del espacio libre)
+    if (ed.selDiv >= 0 && S.divs[ed.selDiv] && !ed.drawing && !ed.ponDiv) {
+      var vg = S.divs[ed.selDiv], og = orientDiv(vg), gx = vg.a[0] * 0.75 + vg.b[0] * 0.25 + (og === 'v' ? fs * 2 : 0), gz = vg.a[1] * 0.75 + vg.b[1] * 0.25 + (og === 'v' ? 0 : fs * 2);
+      var hg = el('g', { 'data-giro': ed.selDiv, style: 'cursor:pointer' });
+      el('circle', { cx: gx, cy: gz, r: HIT, fill: 'transparent' }, hg);
+      el('circle', { cx: gx, cy: gz, r: fs * 0.95, fill: 'var(--orange)', stroke: '#fff', 'stroke-width': px * 1.2 }, hg);
+      var tgi = el('text', { x: gx, y: gz, 'font-size': fs * 1.15, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#fff', 'font-weight': 700 }, hg); tgi.textContent = '⟳';
+      el('title', {}, hg).textContent = 'Girar la pared 90°';
+    }
     // etiquetas de espacios (nombres de los compartimentos)
     S.etq.forEach(function (e, k) {
       var sel = k === ed.selEtq, h = el('g', { class: 'v', 'data-et': k, style: 'cursor:move' }), w = Math.max(e.t.length * fs * 0.55 + fs, fs * 2.4);
       el('rect', { x: e.x - w / 2, y: e.z - fs * 0.7, width: w, height: fs * 1.4, rx: fs * 0.3, fill: sel ? 'var(--orange)' : 'rgba(6,24,58,.85)', stroke: sel ? '#fff' : 'var(--orange-soft)', 'stroke-width': span * 0.003 }, h);
       var tx = el('text', { x: e.x, y: e.z, 'font-size': fs * 0.8, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#fff', 'font-weight': 700 }, h); tx.textContent = e.t;
+    });
+    // equipos de frío: difusor en su pared, unidad condensadora por fuera y la tubería entre los dos
+    S.equipos.forEach(function (q, k) {
+      var dp = difGeo(q); if (!dp) return;
+      var sel = k === ed.selEq, ru = rutaTubo(q), f = condPie(q), pr = dp.rect.map(function (p) { return p[0] + ',' + p[1]; }).join(' ');
+      if (ru) el('polyline', { points: ru.pts.map(function (p3) { return p3[0] + ',' + p3[2]; }).join(' '), fill: 'none', stroke: '#d08a4c', 'stroke-width': px * 2.2, 'stroke-dasharray': px * 6 + ' ' + px * 3, 'stroke-linejoin': 'round' });
+      var rd = rutaDesague(q); if (rd) el('line', { x1: rd.pts[0][0], y1: rd.pts[0][2], x2: rd.pts[2][0], y2: rd.pts[2][2], stroke: '#AEB6C0', 'stroke-width': px * 2, 'stroke-dasharray': px * 3 + ' ' + px * 2 });
+      var hd = el('g', { 'data-eq': k + ':d', style: 'cursor:move' });
+      el('polygon', { points: pr, fill: 'transparent', stroke: 'transparent', 'stroke-width': HIT }, hd);
+      el('polygon', { points: pr, fill: '#F2F5F8', stroke: sel ? 'var(--orange)' : '#5ad1ff', 'stroke-width': px * 1.6 }, hd);
+      lbl([dp.c[0] + dp.inw[0] * (q.F / 2 + fs * 1.1), dp.c[1] + dp.inw[1] * (q.F / 2 + fs * 1.1)], 'D' + (k + 1), sel ? 'var(--orange)' : '#5ad1ff', fs * 0.8);
+      var hc = el('g', { 'data-eq': k + ':c', style: 'cursor:move' }), cw = f.x1 - f.x0, cd = f.z1 - f.z0, r0 = (((q.crot || 0) % 360) + 360) % 360;
+      el('rect', { x: f.x0 - rv, y: f.z0 - rv, width: cw + 2 * rv, height: cd + 2 * rv, fill: 'transparent' }, hc);
+      el('rect', { x: f.x0, y: f.z0, width: cw, height: cd, rx: px * 2, fill: '#C9D0D8', stroke: sel ? 'var(--orange)' : '#fff', 'stroke-width': px * 1.6 }, hc);
+      // raya oscura del lado de los ventiladores
+      var fan = r0 === 0 ? [f.x0, f.z1, f.x1, f.z1] : r0 === 90 ? [f.x1, f.z0, f.x1, f.z1] : r0 === 180 ? [f.x0, f.z0, f.x1, f.z0] : [f.x0, f.z0, f.x0, f.z1];
+      el('line', { x1: fan[0], y1: fan[1], x2: fan[2], y2: fan[3], stroke: '#2A3A50', 'stroke-width': px * 4 }, hc);
+      lbl([(f.x0 + f.x1) / 2, f.z1 + fs], 'U' + (k + 1) + (ru ? ' · ' + nf(ru.largo, 1) + ' m' : ''), sel ? 'var(--orange)' : '#fff', fs * 0.8);   // metros de tubería
+      if (sel) {   // girar la unidad
+        var gx = f.x1 + fs * 1.3, gz = f.z0 - fs * 1.3, hg = el('g', { 'data-eq': k + ':g', style: 'cursor:pointer' });
+        el('circle', { cx: gx, cy: gz, r: HIT, fill: 'transparent' }, hg);
+        el('circle', { cx: gx, cy: gz, r: fs * 0.95, fill: 'var(--orange)', stroke: '#fff', 'stroke-width': px * 1.2 }, hg);
+        var tg3 = el('text', { x: gx, y: gz, 'font-size': fs * 1.15, 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#fff', 'font-weight': 700 }, hg); tg3.textContent = '⟳';
+        el('title', {}, hg).textContent = 'Girar la unidad 90°';
+      }
     });
     // columnas
     S.cols.forEach(function (c, k) {
@@ -1173,6 +1460,187 @@ function iniciar3D() {
     var c = caraCercana(k, sg), v = S.divs[k], o = orientDiv(v), half = S.esp / 2000; if (c === null || !(espacio > 0.05)) return false;
     var ax = o === 'v' ? 0 : 1, nuevo = r2(c - sg * (espacio + half));
     v.a[ax] = nuevo; v.b[ax] = nuevo; return true;
+  }
+  // ---- poner y girar paredes divisorias: de muro a muro (o hasta otra división) por el punto elegido ----
+  // desde p, distancia a la cara más cercana (muro o división, salvo la número sin) en la dirección d; null si no hay
+  function hastaCara(p, d, sin) {
+    var half = S.esp / 2000, best = null;
+    var probar = function (a, b, grosor) {
+      var ex = b[0] - a[0], ez = b[1] - a[1], den = d[0] * ez - d[1] * ex; if (Math.abs(den) < 1e-9) return;
+      var t = ((a[0] - p[0]) * ez - (a[1] - p[1]) * ex) / den, u = ((a[0] - p[0]) * d[1] - (a[1] - p[1]) * d[0]) / den;
+      if (u < -1e-6 || u > 1 + 1e-6) return; t -= grosor; if (t <= 0.005) return;
+      if (best === null || t < best) best = t;
+    };
+    GEO.ed.forEach(function (E) { probar(E.a, E.b, 0); });
+    S.divs.forEach(function (w, j) { if (j !== sin) probar(w.a, w.b, half); });
+    return best;
+  }
+  // la pared que pasa por p: o = 'h' (a lo largo de X) o 'v' (a lo largo de Y); null si p no sirve (fuera de la cava o sobre otra división)
+  function tramoDiv(p, o, sin) {
+    var half = S.esp / 2000;
+    if (!GEO || !p || !enPoligono(p, GEO.P)) return null;
+    if (S.divs.some(function (w, j) { return j !== sin && distSeg(p, w.a, w.b) < half + 0.02; })) return null;
+    var d = o === 'h' ? [1, 0] : [0, 1], t1 = hastaCara(p, [-d[0], -d[1]], sin), t2 = hastaCara(p, d, sin);
+    if (t1 === null || t2 === null || t1 + t2 < 0.3) return null;
+    return { a: [r2(p[0] - d[0] * t1), r2(p[1] - d[1] * t1)], b: [r2(p[0] + d[0] * t2), r2(p[1] + d[1] * t2)] };
+  }
+  // modo "poner pared": la planta se agranda y la pared sigue al dedo o al puntero hasta que se suelta
+  var ultimaO = 'h', puesta = 0;
+  function ponerDivisoria(on) {
+    if (on && ed.drawing) stopDraw();
+    if (!on && !ed.ponDiv) return;
+    var antes = !!ed.ponDiv;
+    if (on && !antes) { var bc = bbox(GEO ? GEO.P : planPts()); ed.ponDiv = { o: ultimaO, p: [snap(bc.x0 + bc.w / 2), snap(bc.z0 + bc.d / 2)], toca: false }; }
+    if (!on) ed.ponDiv = null;
+    $('divBar').hidden = !on; $('planHint').hidden = on; ed.err = '';
+    if (on && !antes) {
+      ed.selDiv = ed.selCol = ed.selSala = ed.selEtq = -1; ed.sel = -1; ed.vb = null; ed.mvb = null; renderLists();
+      if (!$('planWrap').classList.contains('full') && !visorOn) { if (window.innerWidth < 980) { ampAuto = true; ampliar(true); } else enVisor(true); }
+    } else if (!on) salirDibujo();
+    drawPlan();
+  }
+  function girarPon() { if (!ed.ponDiv) return; ed.ponDiv.o = ultimaO = ed.ponDiv.o === 'h' ? 'v' : 'h'; drawPlan(); }
+  function colocarDiv() {
+    var pd = ed.ponDiv, sgm = pd && tramoDiv(pd.p, pd.o, -1);
+    if (!sgm) { ed.err = 'Toca dentro de la cava, donde quieras la pared.'; drawPlan(); return; }
+    S.divs.push({ a: sgm.a, b: sgm.b, puerta: true, bis: 'der', sent: 'afuera' }); puesta = Date.now();
+    ponerDivisoria(false); ed.selDiv = S.divs.length - 1; ed.selCol = -1; ed.vb = null; update(true); renderLists();
+    verSeccion('planta');   // queda a la vista en la planta, elegida y con su botón para girarla
+  }
+  // girar 90° una pared ya puesta, por su centro
+  function girarDiv(k) {
+    var v = S.divs[k]; if (!v) return;
+    var o = orientDiv(v) === 'v' ? 'h' : 'v', c = [snap((v.a[0] + v.b[0]) / 2), snap((v.a[1] + v.b[1]) / 2)], sgm = tramoDiv(c, o, k);
+    if (!sgm) { ed.err = 'Girada no cabe en ese punto: muévela un poco y prueba otra vez.'; drawPlan(); return; }
+    ed.err = ''; v.a = sgm.a; v.b = sgm.b; ed.selDiv = k; ed.vb = null; update(true); renderLists();
+  }
+  // ---- equipos de frío (solo para ver, no entran en la cotización) ----
+  // Difusor de pared arriba, pegado bajo el techo; su unidad condensadora va por fuera de la cava, donde uno la ponga.
+  // La tubería de cobre sale por arriba del difusor, va por el techo hasta el muro más corto hacia la unidad, lo cruza y baja hasta ella.
+  // El desagüe sale por debajo del difusor, cruza la pared donde está colgado y baja por fuera hasta el piso.
+  var MODELOS = { G: { L: 1.8, H: 1.4, F: 0.35, n: 'Grande · 1,80 × 1,40 m' }, C: { L: 1.75, H: 0.675, F: 0.35, n: 'Compacto · 1,75 × 0,675 m' } };
+  var TAMC = { P: { L: 0.85, H: 0.6, F: 0.35, n: 'Pequeña' }, M: { L: 1.0, H: 0.75, F: 0.4, n: 'Mediana' }, G: { L: 1.3, H: 0.95, F: 0.45, n: 'Grande' } };
+  var eqG = null;
+  function difGeo(q) {
+    var E = GEO && GEO.ed[q.e]; if (!E) return null;
+    var L = Math.min(q.L, E.len), u = Math.min(Math.max(q.u, L / 2), E.len - L / 2), inw = [-E.n[0], -E.n[1]];
+    var fp = [E.a[0] + E.e[0] * u, E.a[1] + E.e[1] * u], a0 = [fp[0] - E.e[0] * L / 2, fp[1] - E.e[1] * L / 2], a1 = [fp[0] + E.e[0] * L / 2, fp[1] + E.e[1] * L / 2];
+    return { E: E, L: L, u: u, inw: inw, c: [fp[0] + inw[0] * (q.F / 2 + 0.01), fp[1] + inw[1] * (q.F / 2 + 0.01)],
+      rect: [a0, a1, [a1[0] + inw[0] * q.F, a1[1] + inw[1] * q.F], [a0[0] + inw[0] * q.F, a0[1] + inw[1] * q.F]],
+      hh: Math.min(q.H, Math.max(S.H - 0.4, 0.3)), top: S.H - 0.1 };
+  }
+  // huella de la unidad en la planta (gira de a 90°)
+  function condPie(q) {
+    var T = TAMC[q.ctam] || TAMC.M, de = (((q.crot || 0) % 180) + 180) % 180 ? [T.F, T.L] : [T.L, T.F];
+    return { x0: q.cx - de[0] / 2, x1: q.cx + de[0] / 2, z0: q.cz - de[1] / 2, z1: q.cz + de[1] / 2 };
+  }
+  // la unidad va siempre por fuera: ni su centro ni sus esquinas dentro de la cava, ni una esquina de la cava dentro de ella
+  function condCabe(q) {
+    if (!GEO) return true;
+    var f = condPie(q), pts = [[q.cx, q.cz], [f.x0, f.z0], [f.x1, f.z0], [f.x1, f.z1], [f.x0, f.z1]];
+    if (pts.some(function (p) { return enPoligono(p, GEO.Q); })) return false;
+    return !GEO.Q.some(function (p) { return p[0] > f.x0 && p[0] < f.x1 && p[1] > f.z0 && p[1] < f.z1; });
+  }
+  function nuevoEquipo() {
+    var G = GEO, t = S.esp / 1000, md = MODELOS.C, cuenta = {}, k = 0;
+    S.equipos.forEach(function (q) { cuenta[q.e] = (cuenta[q.e] || 0) + 1; });
+    G.ed.forEach(function (E, i) { var a = cuenta[i] || 0, b = cuenta[k] || 0; if (a < b || (a === b && E.len > G.ed[k].len)) k = i; });
+    var E = G.ed[k], u = E.len / 2, T = TAMC.M;
+    var q = { mod: 'C', L: md.L, H: md.H, F: md.F, e: k, u: r2(u), ctam: 'M', crot: ((Math.round(Math.atan2(E.n[0], E.n[1]) / (Math.PI / 2)) * 90) % 360 + 360) % 360 };
+    for (var dist = t + 0.6 + T.F / 2; dist < 6; dist += 0.5) {
+      q.cx = r2(snap(E.a[0] + E.e[0] * u + E.n[0] * dist)); q.cz = r2(snap(E.a[1] + E.e[1] * u + E.n[1] * dist));
+      if (condCabe(q)) break;
+    }
+    return q;
+  }
+  // el difusor se pega a la pared más cercana al puntero
+  function moverDif(q, w) {
+    var best = null;
+    GEO.ed.forEach(function (E, k) {
+      if (E.len < 0.6) return;
+      var L = Math.min(q.L, E.len), u = Math.min(Math.max((w[0] - E.a[0]) * E.e[0] + (w[1] - E.a[1]) * E.e[1], L / 2), E.len - L / 2);
+      var d = Math.hypot(w[0] - E.a[0] - E.e[0] * u, w[1] - E.a[1] - E.e[1] * u);
+      if (!best || d < best.d) best = { d: d, k: k, u: u };
+    });
+    if (best) { q.e = best.k; q.u = r2(snap(best.u)); }
+  }
+  function moverCond(q, p) { var x = q.cx, z = q.cz; q.cx = r2(snap(p[0])); q.cz = r2(snap(p[1])); if (!condCabe(q)) { q.cx = x; q.cz = z; } }
+  function girarCond(k) {
+    var q = S.equipos[k]; if (!q) return;
+    var antes = q.crot || 0; q.crot = (antes + 90) % 360;
+    if (!condCabe(q)) { q.crot = antes; ed.err = 'Girada no cabe ahí: aléjala un poco de la cava y prueba otra vez.'; drawPlan(); return; }
+    ed.err = ''; ed.selEq = k; update(true); renderLists();
+  }
+  // recorrido de la tubería en 3D: [x, y, z] por punto, y su largo
+  function rutaTubo(q) {
+    var dp = difGeo(q); if (!dp) return null;
+    var t = S.esp / 1000, yc = S.H - 0.05, f = condPie(q), cc = [q.cx, q.cz], T = TAMC[q.ctam] || TAMC.M, yk = -TP - 0.12 + 0.08 + T.H * 0.5, s0 = dp.c, best = null;
+    GEO.ed.forEach(function (E) {
+      if (E.len < 0.4) return;
+      var u = Math.min(Math.max((cc[0] - E.a[0]) * E.e[0] + (cc[1] - E.a[1]) * E.e[1], 0.2), E.len - 0.2);
+      var wi = [E.a[0] + E.e[0] * u - E.n[0] * 0.06, E.a[1] + E.e[1] * u - E.n[1] * 0.06], wo = [E.a[0] + E.e[0] * u + E.n[0] * (t + 0.06), E.a[1] + E.e[1] * u + E.n[1] * (t + 0.06)];
+      var costo = Math.abs(wi[0] - s0[0]) + Math.abs(wi[1] - s0[1]) + Math.abs(cc[0] - wo[0]) + Math.abs(cc[1] - wo[1]);
+      if (!best || costo < best.costo) best = { costo: costo, wi: wi, wo: wo };
+    });
+    if (!best) return null;
+    var P = [[s0[0], dp.top, s0[1]], [s0[0], yc, s0[1]]];
+    // por el techo hasta el muro, en L y por dentro de la cava
+    var c1 = [best.wi[0], s0[1]], c2 = [s0[0], best.wi[1]], ci = enPoligono(c1, GEO.P) ? c1 : (enPoligono(c2, GEO.P) ? c2 : null);
+    if (ci) P.push([ci[0], yc, ci[1]]);
+    P.push([best.wi[0], yc, best.wi[1]], [best.wo[0], yc, best.wo[1]], [best.wo[0], yk, best.wo[1]]);
+    // por fuera, en L, hasta el costado de la unidad
+    var fin = [Math.min(Math.max(best.wo[0], f.x0), f.x1), Math.min(Math.max(best.wo[1], f.z0), f.z1)];
+    var o1 = [fin[0], best.wo[1]], co = !enPoligono(o1, GEO.Q) ? o1 : [best.wo[0], fin[1]];
+    P.push([co[0], yk, co[1]], [fin[0], yk, fin[1]]);
+    var R = [P[0]], largo = 0;
+    P.forEach(function (p3) { var l = R[R.length - 1], d = Math.hypot(p3[0] - l[0], p3[1] - l[1], p3[2] - l[2]); if (d > 0.005) { R.push(p3); largo += d; } });
+    return { pts: R, largo: largo };
+  }
+  // desagüe: baja de la bandeja del difusor, cruza su pared y baja por fuera
+  function rutaDesague(q) {
+    var dp = difGeo(q); if (!dp) return null;
+    var t = S.esp / 1000, E = dp.E, yb = dp.top - dp.hh - 0.04, y1 = yb - 0.12, y0 = -TP - 0.12 + 0.12;
+    var fp = [dp.c[0] - dp.inw[0] * (q.F / 2 + 0.01), dp.c[1] - dp.inw[1] * (q.F / 2 + 0.01)], wo = [fp[0] + E.n[0] * (t + 0.06), fp[1] + E.n[1] * (t + 0.06)];
+    return { pts: [[dp.c[0], yb, dp.c[1]], [dp.c[0], y1, dp.c[1]], [wo[0], y1, wo[1]], [wo[0], y0, wo[1]]] };
+  }
+  // disco mirando hacia z del grupo (ventiladores)
+  function disco(r, h, mat, x, y, z, parent) { var m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 32), mat); m.rotation.x = Math.PI / 2; m.position.set(x, y, z); m.castShadow = true; parent.add(m); return m; }
+  function ventilador(r, x, y, z, sg, parent) {
+    var aro = M(C.tapa, { metalness: 0.45, roughness: 0.4 }), neg = M(C.fan, { roughness: 0.7 });
+    disco(r * 1.1, 0.016, aro, x, y, z + sg * 0.004, parent);
+    disco(r, 0.02, neg, x, y, z + sg * 0.012, parent);
+    disco(r * 0.22, 0.03, aro, x, y, z + sg * 0.02, parent);
+    for (var i = 0; i < 2; i++) { var b = box(r * 2, 0.012, 0.01, aro, x, y, z + sg * 0.026, parent); b.rotation.z = i * Math.PI / 2; }
+  }
+  function tubo(a, b, mat, parent, rad) {
+    var va = new THREE.Vector3(a[0], a[1], a[2]), vb = new THREE.Vector3(b[0], b[1], b[2]), d = vb.clone().sub(va), len = d.length(); if (len < 0.005) return;
+    var m = new THREE.Mesh(new THREE.CylinderGeometry(rad || 0.028, rad || 0.028, len + 0.03, 12), mat);
+    m.position.copy(va).add(vb).multiplyScalar(0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); m.castShadow = true; parent.add(m);
+  }
+  function buildEquipos() {
+    if (!GEO) return;
+    var y0 = -TP - 0.12, matTubo = M(0xb87333, { metalness: 0.6, roughness: 0.35 }), matDes = M(0x6b7380, { roughness: 0.6 });
+    S.equipos.forEach(function (q) {
+      var dp = difGeo(q); if (!dp) return;
+      // difusor: caja blanca con bandeja abajo y ventiladores hacia adentro de la cava
+      var E = dp.E, g = new THREE.Group(), sg = Math.sign(-E.e[1] * dp.inw[0] + E.e[0] * dp.inw[1]) || 1;
+      g.position.set(dp.c[0], dp.top - dp.hh / 2, dp.c[1]); g.rotation.y = Math.atan2(-E.e[1], E.e[0]); eqG.add(g);
+      box(dp.L, dp.hh, q.F, M(C.evap, { roughness: 0.4 }), 0, 0, 0, g);
+      box(dp.L * 0.98, 0.04, q.F * 1.06, M(C.tapa, { metalness: 0.45, roughness: 0.4 }), 0, -dp.hh / 2 - 0.02, 0, g);
+      var nv = Math.max(1, Math.round(dp.L / 0.6)), r = Math.min(dp.hh * 0.36, dp.L / nv * 0.4);
+      for (var i = 0; i < nv; i++) ventilador(r, -dp.L / 2 + dp.L * (i + 0.5) / nv, 0, sg * q.F / 2, sg, g);
+      // unidad condensadora genérica: patas, gabinete gris y ventiladores del lado de afuera
+      var T = TAMC[q.ctam] || TAMC.M, gc = new THREE.Group();
+      gc.position.set(q.cx, y0, q.cz); gc.rotation.y = (q.crot || 0) * Math.PI / 180; eqG.add(gc);
+      box(T.L * 0.96, 0.08, T.F * 0.9, M(C.fan, { roughness: 0.8 }), 0, 0.04, 0, gc);
+      box(T.L, T.H, T.F, M(C.cond, { roughness: 0.5, metalness: 0.2 }), 0, 0.08 + T.H / 2, 0, gc);
+      box(T.L + 0.02, 0.03, T.F + 0.02, M(C.tapa, { metalness: 0.45, roughness: 0.4 }), 0, 0.08 + T.H + 0.015, 0, gc);
+      var nc = T.L > 1.1 ? 2 : 1, rc = Math.min(T.H * 0.38, T.L / nc * 0.42);
+      for (var j = 0; j < nc; j++) ventilador(rc, -T.L / 2 + T.L * (j + 0.5) / nc, 0.08 + T.H / 2, T.F / 2, 1, gc);
+      // tubería de cobre por arriba y desagüe por debajo
+      var ru = rutaTubo(q); if (ru) for (var n2 = 0; n2 < ru.pts.length - 1; n2++) tubo(ru.pts[n2], ru.pts[n2 + 1], matTubo, eqG);
+      var rd = rutaDesague(q); if (rd) for (var n3 = 0; n3 < rd.pts.length - 1; n3++) tubo(rd.pts[n3], rd.pts[n3 + 1], matDes, eqG, 0.022);
+    });
   }
   // ---- salas: se buscan los espacios cerrados con una cuadrícula fina y se ajustan a las caras reales ----
   var salasCache = { key: '', lista: [] };
@@ -1275,18 +1743,33 @@ function iniciar3D() {
     return true;
   }
   var dragFrame = null;
+  // una esquina nueva (desde la planta o desde el 3D); tocar cerca de la primera cierra la forma
+  function ponerEsquina(p, cierre) {
+    var dp = ed.draft;
+    if (dp.length >= 3 && Math.hypot(p[0] - dp[0][0], p[1] - dp[0][1]) < cierre) { finishDraw(); return; }
+    if (dp.length && Math.hypot(p[0] - dp[dp.length - 1][0], p[1] - dp[dp.length - 1][1]) < 0.3) return;
+    dp.push(p); drawPlan();
+  }
   function capture(evt) { try { plan.setPointerCapture(evt.pointerId); } catch (e) {} }
   plan.addEventListener('pointerdown', function (evt) {
     var w = toWorld(evt);
+    if (ed.ponDiv) { ed.ponDiv.p = [snap(w[0]), snap(w[1])]; ed.ponDiv.toca = true; capture(evt); drawPlan(); evt.preventDefault(); return; }
     if (ed.drawing) {
       var dp = ed.draft, span = ed.vb ? Math.max(ed.vb[2], ed.vb[3]) : 10, p = [snap(w[0]), snap(w[1])];
       if (dp.length) p = align(p, [dp[dp.length - 1], dp[0]], span * 0.03);
-      if (dp.length >= 3 && Math.hypot(p[0] - dp[0][0], p[1] - dp[0][1]) < span * 0.035) { finishDraw(); return; }
-      if (dp.length && Math.hypot(p[0] - dp[dp.length - 1][0], p[1] - dp[dp.length - 1][1]) < 0.3) return;
-      dp.push(p); ed.vb = null; drawPlan(); return;
+      ponerEsquina(p, span * 0.035); return;
     }
     var tg = evt.target.closest ? evt.target : null;
     var cg = tg && tg.closest('[data-col]'), dg = tg && tg.closest('[data-dv]'), eg = tg && tg.closest('[data-et]'), dl = tg && tg.closest('[data-dvl]'), mw = tg && tg.closest('[data-mw]');
+    var gr = tg && tg.closest('[data-giro]');
+    if (gr) { girarDiv(Number(gr.getAttribute('data-giro'))); evt.preventDefault(); return; }
+    var qg = tg && tg.closest('[data-eq]');   // equipos: arrastrar el difusor por las paredes o la unidad por fuera; ⟳ gira la unidad
+    if (qg) {
+      var pq = qg.getAttribute('data-eq').split(':'), kq = Number(pq[0]), qq = S.equipos[kq];
+      if (pq[1] === 'g') { girarCond(kq); evt.preventDefault(); return; }
+      ed.obj = { t: pq[1] === 'c' ? 'eqC' : 'eqD', k: kq, off: [qq.cx - w[0], qq.cz - w[1]] }; ed.selEq = kq; ed.selCol = ed.selDiv = ed.selEtq = -1; ed.sel = -1;
+      capture(evt); renderLists(); drawPlan(); evt.preventDefault(); return;
+    }
     if (mw && !ed.drawing) {   // tocar un muro muestra su recuadro listo para escribir
       var im = Number(mw.getAttribute('data-mw')); ed.selMuro = im; ed.selDiv = -1; drawPlan();
       setTimeout(function () { var f = document.querySelector('#cotaIn [data-ci="' + im + '"]'); if (f) f.focus(); }, 30); evt.preventDefault(); return;
@@ -1321,7 +1804,7 @@ function iniciar3D() {
         capture(evt); renderLists(); drawPlan(); evt.preventDefault(); return;
       }
     }
-    if (S.forma !== 'poli') { if (ed.selCol >= 0 || ed.selDiv >= 0 || ed.selSala >= 0) { ed.selCol = ed.selDiv = ed.selSala = -1; renderLists(); drawPlan(); } empezarPan(evt); return; }
+    if (S.forma !== 'poli') { if (ed.selCol >= 0 || ed.selDiv >= 0 || ed.selSala >= 0 || ed.selEq >= 0) { ed.selCol = ed.selDiv = ed.selSala = ed.selEq = -1; renderLists(); drawPlan(); } empezarPan(evt); return; }
     var vg = tg && tg.closest('[data-v]'), mg = tg && tg.closest('[data-mid]');
     if (vg) {
       ed.sel = ed.drag = Number(vg.getAttribute('data-v'));
@@ -1332,7 +1815,7 @@ function iniciar3D() {
       np.splice(k2 + 1, 0, [r2((P[k2][0] + P[j][0]) / 2), r2((P[k2][1] + P[j][1]) / 2)]);
       ed.sel = k2 + 1; setPts(np, true); return;
     }
-    ed.sel = -1; ed.selCol = ed.selDiv = -1; renderLists(); drawPlan(); empezarPan(evt);
+    ed.sel = -1; ed.selCol = ed.selDiv = ed.selEq = -1; renderLists(); drawPlan(); empezarPan(evt);
   });
   function empezarPan(evt) { if (ed.selMuro >= 0) { var ae = document.activeElement; if (ae && $('cotaIn').contains(ae)) ae.blur(); ed.selMuro = -1; drawPlan(); } ed.pan = { x: evt.clientX, y: evt.clientY, vb: vbActual(), mov: false }; capture(evt); }
   // pellizco con dos dedos: se toma antes que el resto para no poner esquinas sin querer
@@ -1343,7 +1826,7 @@ function iniciar3D() {
     dedos[evt.pointerId] = { x: evt.clientX, y: evt.clientY };
     if (Object.keys(dedos).length === 2) {
       evt.stopPropagation(); evt.preventDefault();
-      ed.obj = null; ed.drag = -1; ed.pan = null; var pi = pinchInfo(); ed.pinch = { d: pi.d, x: pi.x, y: pi.y, vb: vbActual() };
+      ed.obj = null; ed.drag = -1; ed.pan = null; if (ed.ponDiv) ed.ponDiv.toca = false; var pi = pinchInfo(); ed.pinch = { d: pi.d, x: pi.x, y: pi.y, vb: vbActual() };
       try { plan.setPointerCapture(evt.pointerId); } catch (e) {}
     }
   }, true);
@@ -1363,6 +1846,7 @@ function iniciar3D() {
   $('pMenos').addEventListener('click', function () { zoomPlan(1.3); });
   $('pFit').addEventListener('click', encajar);
   $('pUndo').addEventListener('click', deshacer);
+  $('undo3').addEventListener('click', deshacer);
   $('pSalas').setAttribute('aria-pressed', String(!!S.verSalas));
   var pintarCajas = function () { $('pCajas').setAttribute('aria-pressed', String(!!S.cajasSiempre)); $('pCajas').textContent = S.cajasSiempre ? 'Recuadros: siempre' : 'Recuadros: al tocar'; };
   pintarCajas();
@@ -1371,12 +1855,13 @@ function iniciar3D() {
   var ampAuto = false;
   function ampliar(on) {
     var w = $('planWrap'); on = on === undefined ? !w.classList.contains('full') : on;
-    w.classList.toggle('full', on); document.body.classList.toggle('planfull', on);
+    w.classList.toggle('full', on); document.body.classList.toggle('planfull', on); moverPlanta();
     $('pAmp').textContent = on ? '✓ Listo' : '⛶ Ampliar planta'; ed.mvb = null; ed.vb = null;
     setTimeout(function () { ed.vb = null; drawPlan(); }, 30);
   }
   $('pAmp').addEventListener('click', function () { ampAuto = false; ampliar(); });
   plan.addEventListener('pointermove', function (evt) {
+    if (ed.ponDiv) { var wp = toWorld(evt); ed.ponDiv.p = [snap(wp[0]), snap(wp[1])]; if (!dragFrame) dragFrame = requestAnimationFrame(function () { dragFrame = null; drawPlan(); }); return; }
     if (ed.pan) {
       var pn = ed.pan, k = pn.vb[2] / Math.max(plan.clientWidth, 1), dx = (evt.clientX - pn.x) * k, dz = (evt.clientY - pn.y) * k;
       if (Math.abs(evt.clientX - pn.x) + Math.abs(evt.clientY - pn.y) > 6) pn.mov = true;
@@ -1412,6 +1897,8 @@ function iniciar3D() {
         else { sa3.w = r2(Math.max(snap(u3 - ts) - sa3.u0, 0.8)); sa3.d = r2(Math.max(snap(z3 - 2 * ts), 0.8)); }
         syncLists();
       }
+      else if (ed.obj.t === 'eqD') moverDif(S.equipos[ed.obj.k], w3);
+      else if (ed.obj.t === 'eqC') moverCond(S.equipos[ed.obj.k], [w3[0] + ed.obj.off[0], w3[1] + ed.obj.off[1]]);
       else { var v = S.divs[ed.obj.k], other = ed.obj.end === 'a' ? v.b : v.a; v[ed.obj.end] = align([snap(w3[0]), snap(w3[1])], PP.concat([other]), span3 * 0.025); }
       if (!dragFrame) dragFrame = requestAnimationFrame(function () { dragFrame = null; update(true); });
       return;
@@ -1430,29 +1917,151 @@ function iniciar3D() {
     if (ed.obj) { ed.obj = null; ed.vb = null; update(true); renderLists(); return; }
     if (ed.drag >= 0) { ed.drag = -1; ed.vb = null; update(true); }
   }
-  plan.addEventListener('pointerup', endDrag);
-  plan.addEventListener('pointercancel', endDrag);
+  // en el modo "poner pared", soltar la pone donde quedó
+  plan.addEventListener('pointerup', function () { if (ed.ponDiv) { if (ed.ponDiv.toca) { ed.ponDiv.toca = false; colocarDiv(); } return; } endDrag(); });
+  plan.addEventListener('pointercancel', function () { if (ed.ponDiv) { ed.ponDiv.toca = false; return; } endDrag(); });
+  // en el teléfono, al soltar se cierra la planta grande: el toque no debe caer en el botón que queda debajo
+  document.addEventListener('click', function (e) { if (Date.now() - puesta < 450) { e.stopPropagation(); e.preventDefault(); } }, true);
   plan.addEventListener('pointerleave', function () { if (ed.drawing) { ed.hover = null; drawPlan(); } });
 
-  function startDraw() {
+  function startDraw(en3d) {
+    if (ed.ponDiv) ponerDivisoria(false);
     if (S.forma !== 'poli') { S.forma = 'poli'; if (!validPts(S.pts)) S.pts = orient(rectPts(S.L, S.W)); syncUI(GEO); }
     ed.drawing = true; ed.draft = []; ed.sel = -1; ed.vb = null; ed.mvb = null; ed.hover = null; $('drawBar').hidden = false; $('planHint').hidden = true; $('vEdit').hidden = true;
-    // en el teléfono se dibuja con la planta en pantalla completa
-    if (window.innerWidth < 760 && !$('planWrap').classList.contains('full')) { ampAuto = true; ampliar(true); } else { drawPlan(); plan.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    // dibujar tocando el piso del 3D
+    if (en3d === true) { if (esTel()) ponerHoja(0); enVisor(true); modoDibujo3D(true); return; }
+    // en el teléfono y la tablet se dibuja con la planta en pantalla completa; en computadora, sobre el área del 3D
+    if ($('planWrap').classList.contains('full')) drawPlan();
+    else if (window.innerWidth < 980) { ampAuto = true; ampliar(true); }
+    else enVisor(true);
   }
-  function stopDraw() { ed.drawing = false; ed.draft = []; ed.vb = null; ed.mvb = null; $('drawBar').hidden = true; $('planHint').hidden = false; if (ampAuto) { ampAuto = false; ampliar(false); } drawPlan(); }
+  var visorOn = false, visorSitio = document.createComment('planta');
+  function enVisor(on) {
+    var w = $('planWrap'); visorOn = on; w.classList.toggle('visor', on);
+    // el panel de la derecha recorta lo que tiene adentro: mientras se dibuja, la planta pasa al cuerpo de la página
+    moverPlanta();
+    if (on) { var r = $('viewer').getBoundingClientRect(); w.style.top = r.top + 'px'; w.style.left = r.left + 'px'; w.style.width = r.width + 'px'; w.style.height = r.height + 'px'; }
+    else w.style.top = w.style.left = w.style.width = w.style.height = '';
+    ed.vb = null; ed.mvb = null; setTimeout(function () { ed.vb = null; drawPlan(); }, 30);
+  }
+  window.addEventListener('resize', function () { if (visorOn) enVisor(true); });
+  // el panel flota con vidrio (o es una hoja en el teléfono) y recorta lo fijo que tiene adentro: la planta ampliada o sobre el 3D pasa al cuerpo de la página
+  function moverPlanta() {
+    var w = $('planWrap'), fuera = visorOn || w.classList.contains('full');
+    if (fuera && w.parentNode !== document.body) { w.parentNode.insertBefore(visorSitio, w); document.body.appendChild(w); }
+    if (!fuera && visorSitio.parentNode) { visorSitio.parentNode.insertBefore(w, visorSitio); visorSitio.remove(); }
+  }
+  function salirDibujo() {
+    var centrar = modo3d || visorOn;
+    if (modo3d) quitarModo3D();
+    if (ampAuto) { ampAuto = false; ampliar(false); }
+    if (visorOn) enVisor(false);
+    if (centrar) setTimeout(function () { $('fit').click(); }, 60);
+    if (esTel() && HOJA.n === 0) ponerHoja(1);
+  }
+
+  // ---------- dibujar la planta tocando el piso del 3D ----------
+  // Las esquinas son las mismas de la planta (ed.draft): se puede pasar de la planta al 3D y volver sin perderlas.
+  // Mientras tanto la cava anterior se oculta; un toque pone una esquina y arrastrar sigue girando la vista.
+  var modo3d = false, ampAuto3 = false, hover3 = null, toque3 = null, dibG = new THREE.Group(), xlabelsEl = $('xlabels');
+  var FYD = -TP - 0.115, rayo = new THREE.Raycaster(), pisoPl = new THREE.Plane(new THREE.Vector3(0, 1, 0), -FYD);
+  var HINT_PLANTA = $('drawHint').textContent, HINT_3D = 'Toca el piso para poner cada esquina. Arrastra para girar y usa la rueda (o pellizca) para acercar. Toca la primera esquina para cerrar.';
+  var matD = new THREE.MeshBasicMaterial({ color: 0xFF6B12 }), matB = new THREE.MeshBasicMaterial({ color: 0xFFFFFF }), matH = new THREE.MeshBasicMaterial({ color: 0xFFB184, transparent: true, opacity: 0.9 });
+  var matDV = new THREE.MeshBasicMaterial({ color: 0xFF6B12, transparent: true, opacity: 0.16, side: THREE.DoubleSide, depthWrite: false });
+  scene.add(dibG);
+  function modoDibujo3D(on) {
+    var w = $('planWrap'); modo3d = on; hover3 = null; $('rDibujar').setAttribute('aria-pressed', String(on));
+    w.classList.toggle('tres', on); document.body.classList.toggle('dib3d', on); root.visible = !on;
+    $('draw3d').textContent = on ? 'Dibujar en planta' : 'Dibujar en 3D';
+    $('drawHint').textContent = on ? HINT_3D : HINT_PLANTA;
+    if (on) {
+      // en el teléfono la planta estaba en pantalla completa: se cierra para ver el 3D
+      if (w.classList.contains('full')) { ampAuto = false; ampAuto3 = true; ampliar(false); }
+      vista3D();
+    } else if (ampAuto3 || (!visorOn && window.innerWidth < 980)) { ampAuto3 = false; ampAuto = true; ampliar(true); }
+    pintarDib3(); drawPlan();
+  }
+  function quitarModo3D() {
+    modo3d = false; hover3 = null; ampAuto3 = false; root.visible = true; $('rDibujar').setAttribute('aria-pressed', 'false');
+    $('planWrap').classList.remove('tres'); document.body.classList.remove('dib3d');
+    $('draw3d').textContent = 'Dibujar en 3D'; $('drawHint').textContent = HINT_PLANTA; pintarDib3();
+  }
+  // cámara alta mirando el piso, para que los toques caigan donde uno apunta
+  function vista3D() {
+    var dp = ed.draft, ox = root.position.x, oz = root.position.z, c = [0, 0], ext = 9;
+    if (dp.length) { var b = bbox(dp); c = [(b.x0 + b.x1) / 2 + ox, (b.z0 + b.z1) / 2 + oz]; ext = Math.max(b.w, b.d, 5) + 4; }
+    var dist = ext * 1.5 / Math.min(1, Math.max(camera.aspect, 0.55));
+    controls.target.set(c[0], FYD, c[1]);
+    camera.position.set(c[0], FYD + dist * 0.9, c[1] + dist * 0.45); controls.update(); pedir();
+  }
+  // punto del piso bajo el puntero, en metros de la planta (con la misma cuadrícula de 5 cm y alineación que la planta)
+  function tol3() { return Math.max(0.15, camera.position.distanceTo(controls.target) * 0.018); }
+  function punto3(evt) {
+    var r = renderer.domElement.getBoundingClientRect(), q = new THREE.Vector3();
+    rayo.setFromCamera(new THREE.Vector2((evt.clientX - r.left) / r.width * 2 - 1, -((evt.clientY - r.top) / r.height) * 2 + 1), camera);
+    if (!rayo.ray.intersectPlane(pisoPl, q)) return null;
+    var dp = ed.draft, p = [snap(q.x - root.position.x), snap(q.z - root.position.z)];
+    if (dp.length) p = align(p, [dp[dp.length - 1], dp[0]], tol3());
+    return p;
+  }
+  var lienzo = renderer.domElement;
+  lienzo.addEventListener('pointerdown', function (e) { if (modo3d && ed.drawing) toque3 = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+  lienzo.addEventListener('pointermove', function (e) { if (!(modo3d && ed.drawing) || (toque3 && e.pointerType !== 'mouse')) return; hover3 = punto3(e); pintarDib3(); });
+  lienzo.addEventListener('pointerup', function (e) {
+    if (!(modo3d && ed.drawing) || !toque3) return;
+    var t = toque3; toque3 = null;
+    if (Math.hypot(e.clientX - t.x, e.clientY - t.y) > 6 || Date.now() - t.t > 700) return;   // fue un giro, no un toque
+    var p = punto3(e); if (p) { hover3 = e.pointerType === 'mouse' ? p : null; ponerEsquina(p, tol3() * 1.3); }
+  });
+  lienzo.addEventListener('pointerleave', function () { if (modo3d && hover3) { hover3 = null; pintarDib3(); } });
+  function pintarDib3() {
+    while (dibG.children.length) { var o = dibG.children[0]; dibG.remove(o); if (o.geometry) o.geometry.dispose(); }
+    if (modo3d && ed.drawing) {
+      var ox = root.position.x, oz = root.position.z, dp = ed.draft, y = FYD + 0.01;
+      var W = function (q) { return new THREE.Vector3(q[0] + ox, y, q[1] + oz); };
+      var muro = function (a, b, mat, alto) {
+        var A = W(a), B = W(b), len = A.distanceTo(B); if (len < 0.01) return;
+        var ry = Math.atan2(-(B.z - A.z), B.x - A.x), m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.05, 0.07), mat);
+        m.position.copy(A).add(B).multiplyScalar(0.5); m.rotation.y = ry; dibG.add(m);
+        if (alto) { var pl = new THREE.Mesh(new THREE.PlaneGeometry(len, alto), matDV); pl.position.set((A.x + B.x) / 2, y + alto / 2, (A.z + B.z) / 2); pl.rotation.y = ry; dibG.add(pl); }
+      };
+      for (var i = 1; i < dp.length; i++) muro(dp[i - 1], dp[i], matD, S.H);
+      if (dp.length && hover3) muro(dp[dp.length - 1], hover3, matH, 0);
+      dp.forEach(function (q, i) {
+        var r = i === 0 && dp.length >= 3 ? 0.2 : 0.11, s = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.08, 24), i === 0 ? matD : matB);
+        s.position.copy(W(q)); dibG.add(s);
+      });
+      if (hover3) { var hv = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.06, 20), matH); hv.position.copy(W(hover3)); dibG.add(hv); }
+    }
+    placeDib3Labels(); pedir();
+  }
+  // largo de cada muro dibujado, como etiqueta sobre el 3D
+  function placeDib3Labels() {
+    if (!(modo3d && ed.drawing)) { if (xlabelsEl && xlabelsEl.innerHTML) xlabelsEl.innerHTML = ''; return; }
+    var ox = root.position.x, oz = root.position.z, w = viewer.clientWidth, h = viewer.clientHeight, dp = ed.draft, segs = [];
+    for (var i = 1; i < dp.length; i++) segs.push([dp[i - 1], dp[i]]);
+    if (dp.length && hover3) segs.push([dp[dp.length - 1], hover3]);
+    xlabelsEl.innerHTML = segs.map(function (s) {
+      var a = s[0], b = s[1], len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (len < 0.05) return '';
+      tmpV.set((a[0] + b[0]) / 2 + ox, FYD + 0.1, (a[1] + b[1]) / 2 + oz).project(camera); if (tmpV.z >= 1) return '';
+      return '<div class="chip" style="left:' + ((tmpV.x + 1) / 2 * w).toFixed(1) + 'px;top:' + ((1 - tmpV.y) / 2 * h).toFixed(1) + 'px">' + nf(len, 2) + ' m</div>';
+    }).join('');
+  }
+  $('draw3dIni').addEventListener('click', function () { startDraw(true); });
+  $('draw3d').addEventListener('click', function () { modoDibujo3D(!modo3d); });
+  function stopDraw() { ed.drawing = false; ed.draft = []; ed.vb = null; ed.mvb = null; $('drawBar').hidden = true; $('planHint').hidden = false; salirDibujo(); drawPlan(); }
   function finishDraw() {
     if (ed.draft.length < 3) { ed.err = 'Pon al menos 3 esquinas antes de cerrar.'; $('planErr').hidden = false; $('planErr').textContent = ed.err; return; }
     var np = ed.draft.slice(), pr = problem(np);
     if (pr) { $('planErr').hidden = false; $('planErr').textContent = pr; return; }
     var b = bbox(np); np = np.map(function (q) { return [q[0] - b.x0, q[1] - b.z0]; });
-    ed.drawing = false; ed.draft = []; ed.mvb = null; $('drawBar').hidden = true; $('planHint').hidden = false; if (ampAuto) { ampAuto = false; ampliar(false); }
+    ed.drawing = false; ed.draft = []; ed.mvb = null; $('drawBar').hidden = true; $('planHint').hidden = false; salirDibujo();
     S.doors.forEach(function (d) { d.e = 0; }); S.cols = []; S.divs = []; S.salas = []; S.pts = orient(np); ed.vb = null; setPts(S.pts); renderLists();
   }
   $('draw').addEventListener('click', startDraw);
   $('cancelDraw').addEventListener('click', stopDraw);
   $('closeShape').addEventListener('click', finishDraw);
-  $('undoPt').addEventListener('click', function () { if (ed.draft.length) { ed.draft.pop(); ed.vb = null; drawPlan(); } });
+  $('undoPt').addEventListener('click', function () { if (ed.draft.length) { ed.draft.pop(); drawPlan(); } });
   // dibujar por medidas: largo + dirección desde la última esquina
   document.querySelectorAll('.flechas [data-dir]').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -1460,7 +2069,7 @@ function iniciar3D() {
       $('planErr').hidden = true; if (!ed.draft.length) ed.draft.push([0, 0]);
       var q = ed.draft[ed.draft.length - 1], d = { u: [0, -1], d: [0, 1], l: [-1, 0], r: [1, 0] }[b.dataset.dir], np = [r2(q[0] + d[0] * v), r2(q[1] + d[1] * v)];
       if (ed.draft.length >= 3 && Math.hypot(np[0] - ed.draft[0][0], np[1] - ed.draft[0][1]) < 0.02) { finishDraw(); return; }
-      ed.draft.push(np); ed.vb = null; ed.mvb = null; drawPlan(); $('dLen').select();
+      ed.draft.push(np); ed.mvb = null; drawPlan(); $('dLen').select();
     });
   });
   $('delV').addEventListener('click', function () {
@@ -1627,6 +2236,15 @@ function iniciar3D() {
   function escH(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
   function fld(t, k, lab, v) { return '<label class="num"><span>' + lab + '</span><input data-f="' + t + '" data-k="' + k + '" inputmode="decimal" value="' + nf(v, 2) + '"><span>m</span></label>'; }
   function renderLists() {
+    $('eqList').innerHTML = S.equipos.map(function (q, k) {
+      var ru = GEO ? rutaTubo(q) : null, qfld = function (f, lab, v) { return '<label class="num"><span>' + lab + '</span><input data-qf="' + f + '" data-k="' + k + '" inputmode="decimal" value="' + nf(v, 2) + '"><span>m</span></label>'; };
+      return '<div class="xitem' + (k === ed.selEq ? ' sel' : '') + '"><div class="xh">Difusor D' + (k + 1) + ' y unidad U' + (k + 1) + '<span class="xbtns"><button type="button" class="btn ghost sm" data-del="eq" data-k="' + k + '">Quitar</button></span></div>' +
+        '<label class="row"><span>Difusor</span><select data-qm="' + k + '">' + Object.keys(MODELOS).map(function (m) { return '<option value="' + m + '"' + (q.mod === m ? ' selected' : '') + '>' + MODELOS[m].n + '</option>'; }).join('') + '</select></label>' +
+        '<div class="xg">' + qfld('L', 'Largo', q.L) + qfld('H', 'Alto', q.H) + qfld('F', 'Fondo', q.F) + '</div>' +
+        '<label class="row"><span>Unidad condensadora</span><select data-qt="' + k + '">' + Object.keys(TAMC).map(function (m) { return '<option value="' + m + '"' + ((q.ctam || 'M') === m ? ' selected' : '') + '>' + TAMC[m].n + '</option>'; }).join('') + '</select></label>' +
+        '<div class="actions"><button type="button" class="btn ghost sm" data-qg="' + k + '">⟳ Girar la unidad</button></div>' +
+        '<p class="note">' + (ru ? 'Tubería de cobre: unos ' + nf(ru.largo, 1) + ' m, por arriba del difusor y por el techo. El desagüe sale por debajo del difusor. ' : '') + 'Arrastra el difusor por las paredes y la unidad por fuera de la cava. Solo para ver: no entra en la cotización.</p></div>';
+    }).join('');
     $('colList').innerHTML = S.cols.map(function (c, k) {
       return '<div class="xitem' + (k === ed.selCol ? ' sel' : '') + '"><div class="xh">Columna C' + (k + 1) + '<button type="button" class="btn ghost sm" data-del="col" data-k="' + k + '">Quitar</button></div>' +
         '<div class="xg">' + fld('cx', k, 'Centro X', c.x) + fld('cz', k, 'Centro Y', c.z) + fld('cw', k, 'Ancho', c.w) + fld('cd', k, 'Fondo', c.d) + '</div>' +
@@ -1635,7 +2253,7 @@ function iniciar3D() {
     }).join('');
     $('divList').innerHTML = S.divs.map(function (v, k) {
       var len = Math.hypot(v.b[0] - v.a[0], v.b[1] - v.a[1]);
-      return '<div class="xitem' + (k === ed.selDiv ? ' sel' : '') + '"><div class="xh">Pared divisoria D' + (k + 1) + ' · ' + nf(len, 2) + ' m<button type="button" class="btn ghost sm" data-del="div" data-k="' + k + '">Quitar</button></div>' +
+      return '<div class="xitem' + (k === ed.selDiv ? ' sel' : '') + '"><div class="xh">Pared divisoria D' + (k + 1) + ' · ' + nf(len, 2) + ' m<span class="xbtns"><button type="button" class="btn ghost sm" data-giro="' + k + '" title="Girar 90°">⟳ Girar</button><button type="button" class="btn ghost sm" data-del="div" data-k="' + k + '">Quitar</button></span></div>' +
         '<label class="row"><span>Etiqueta</span><input data-dt="' + k + '" type="text" maxlength="30" placeholder="Ej: separa congelados" value="' + escH(v.tag || '') + '"></label>' +
         (function () {
           var o = orientDiv(v); if (!o) return '';
@@ -1679,6 +2297,13 @@ function iniciar3D() {
   }
   function onListChange(e) {
     var t = e.target;
+    if (t.dataset.qm !== undefined) { var q1 = S.equipos[Number(t.dataset.qm)], md = MODELOS[t.value]; if (q1 && md) { q1.mod = t.value; q1.L = md.L; q1.H = md.H; q1.F = md.F; } update(true); renderLists(); return; }
+    if (t.dataset.qt !== undefined) {
+      var q2 = S.equipos[Number(t.dataset.qt)]; if (!q2) return; var tam0 = q2.ctam; q2.ctam = t.value;
+      if (!condCabe(q2)) { q2.ctam = tam0; ed.err = 'Más grande no cabe ahí: aleja la unidad un poco de la cava.'; } else ed.err = '';
+      update(true); renderLists(); return;
+    }
+    if (t.dataset.qf) { var q3 = S.equipos[Number(t.dataset.k)], v4 = parseFloat(String(t.value).replace(',', '.')); if (q3 && v4 >= 0.1) q3[t.dataset.qf] = r2(Math.min(v4, 4)); update(true); renderLists(); return; }
     if (t.dataset.de) { var pr = t.dataset.de.split(':'), vv2 = parseFloat(String(t.value).replace(',', '.')); if (!moverDiv(Number(pr[0]), Number(pr[1]), vv2)) { ed.err = 'Escribe un espacio mayor a 5 cm que quepa entre los muros.'; } else ed.err = ''; ed.selDiv = Number(pr[0]); ed.vb = null; update(true); renderLists(); return; }
     if (t.dataset.dt !== undefined) { S.divs[Number(t.dataset.dt)].tag = t.value.trim(); update(true); renderLists(); return; }
     if (t.dataset.et2 !== undefined) { S.etq[Number(t.dataset.et2)].t = t.value.trim() || 'Espacio'; update(true); renderLists(); return; }
@@ -1704,15 +2329,18 @@ function iniciar3D() {
     ed.vb = null; update(true); renderLists();
   }
   function onListClick(e) {
+    var bg = e.target.closest('[data-giro]'); if (bg) { girarDiv(Number(bg.dataset.giro)); return; }
+    var bq = e.target.closest('[data-qg]'); if (bq) { girarCond(Number(bq.dataset.qg)); return; }
     var bm = e.target.closest('[data-dm]');
     if (bm) { var q = bm.dataset.dm.split(':').map(Number), act = espacioDiv(q[0], q[1]); if (act !== null && moverDiv(q[0], q[1], act + q[2] * 0.05)) { ed.selDiv = q[0]; ed.vb = null; update(true); renderLists(); } return; }
     var b = e.target.closest('[data-del]'); if (!b) return;
     var k = Number(b.dataset.k);
+    if (b.dataset.del === 'eq') { S.equipos.splice(k, 1); ed.selEq = -1; update(true); renderLists(); return; }
     if (b.dataset.del === 'etq') { S.etq.splice(k, 1); ed.selEtq = -1; update(true); renderLists(); return; }
     if (b.dataset.del === 'col') { S.cols.splice(k, 1); ed.selCol = -1; } else if (b.dataset.del === 'sala') { S.salas.splice(k, 1); ed.selSala = -1; ed.vb = null; } else { S.divs.splice(k, 1); ed.selDiv = -1; }
     update(true); renderLists();
   }
-  ['colList', 'divList', 'salaList', 'etqList'].forEach(function (id) { $(id).addEventListener('change', onListChange); $(id).addEventListener('click', onListClick); });
+  ['colList', 'divList', 'salaList', 'etqList', 'eqList'].forEach(function (id) { $(id).addEventListener('change', onListChange); $(id).addEventListener('click', onListClick); });
   // deslizadores de las salas: cambian la medida en vivo
   $('salaList').addEventListener('input', function (e) {
     var t = e.target; if (!t.dataset.r) return;
@@ -1727,16 +2355,24 @@ function iniciar3D() {
     S.cols.push({ x: r2(b.x0 + b.w / 2), z: r2(b.z0 + b.d / 2), w: 0.4, d: 0.4, forrar: true, rec: 'galv' });
     ed.selCol = S.cols.length - 1; ed.selDiv = -1; update(true); renderLists();
   });
+  $('addEq').addEventListener('click', function () {
+    if (!GEO) return;
+    S.equipos.push(nuevoEquipo()); ed.selEq = S.equipos.length - 1; ed.selCol = ed.selDiv = -1; ed.vb = null; update(true); renderLists();
+    verSeccion('planta');   // queda a la vista en la planta, elegido
+  });
   $('addEtq').addEventListener('click', function () {
     var b = bbox(planPts()), n = S.etq.length;
     S.etq.push({ x: r2(b.x0 + b.w * (0.3 + 0.2 * (n % 3))), z: r2(b.z0 + b.d * 0.5), t: 'Espacio ' + (n + 1) });
     ed.selEtq = S.etq.length - 1; update(true); renderLists();
     setTimeout(function () { var e = document.querySelector('[data-et2="' + (S.etq.length - 1) + '"]'); if (e) { e.focus(); e.select(); } }, 50);
   });
-  $('addDiv').addEventListener('click', function () {
-    var b = bbox(planPts()), z = r2(b.z0 + b.d / 2);
-    S.divs.push({ a: [r2(b.x0), z], b: [r2(b.x1), z], puerta: true, bis: 'der', sent: 'afuera' });
-    ed.selDiv = S.divs.length - 1; ed.selCol = -1; update(true); renderLists();
+  $('addDiv').addEventListener('click', function () { ponerDivisoria(true); });
+  $('divGirar').addEventListener('click', girarPon);
+  $('divCancel').addEventListener('click', function () { ponerDivisoria(false); });
+  document.addEventListener('keydown', function (e) {
+    if (!ed.ponDiv || /INPUT|SELECT|TEXTAREA/.test((e.target && e.target.tagName) || '')) return;
+    if (e.key === 'Escape') { ponerDivisoria(false); e.preventDefault(); }
+    else if (e.key === 'r' || e.key === 'R') { girarPon(); e.preventDefault(); }
   });
   // sala o cajón adyacente nueva: en el muro de la puerta que se edita, sin taparla si se puede
   $('addSala').addEventListener('click', function () {
@@ -1771,19 +2407,23 @@ function iniciar3D() {
   var espPrev = S.esp;
   bindSeg('g-esp', 'esp', Number, function () { var d = (S.esp - espPrev) / 1000; espPrev = S.esp; if (S.forma === 'rect') { S.L = r2(S.L - 2 * d); S.W = r2(S.W - 2 * d); } });
   $('d-muro').addEventListener('change', function () { curDoor().e = Number(this.value); update(true); enfocarPuerta(); });
-  $('d-tam').addEventListener('change', function () { curDoor().tam = this.value; update(true); enfocarPuerta(); });
+  $('d-tam').addEventListener('change', function () { var cd = curDoor(); cd.tam = this.value; cd.tipo = PUERTAS[cd.tam].w > 1.3 ? 'corr' : 'bat'; update(true); enfocarPuerta(); });
+  $('d-tipo').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; curDoor().tipo = b.dataset.v; update(true); enfocarPuerta(); });
+  var abCuadro = null;
+  $('d-ab').addEventListener('input', function () { curDoor().ab = parseFloat(this.value) || 0; rangeFill(this); $('d-ab-txt').textContent = textoAb(curDoor().ab); if (!abCuadro) abCuadro = requestAnimationFrame(function () { abCuadro = null; update(true); }); });
+  function textoAb(a) { return a > 0 ? Math.round(a * 100) + ' %' : 'Cerrada'; }
   $('d-pos').addEventListener('input', function () { curDoor().pos = parseFloat(this.value); update(true); marcarPuerta(); });
   $('d-bis').addEventListener('change', function () { curDoor().bis = this.value; update(true); enfocarPuerta(); });
   $('d-sent').addEventListener('change', function () { curDoor().sent = this.value; update(true); enfocarPuerta(); });
   // pestañas de puertas: P1, P2… y + Puerta
   $('doorTabs').addEventListener('click', function (e) {
     var b = e.target.closest('button'); if (!b) return;
-    if (b.dataset.add) { var c = curDoor(); S.doors.push({ e: c ? (c.e + 1) % (GEO ? GEO.ed.length : 4) : 0, tam: '0.9x2.1', pos: 0.5, cortina: false, bis: 'der', sent: 'afuera' }); selDoor = S.doors.length - 1; }
+    if (b.dataset.add) { var c = curDoor(); S.doors.push({ e: c ? (c.e + 1) % (GEO ? GEO.ed.length : 4) : 0, tam: '0.9x2.1', pos: 0.5, cortina: false, bis: 'der', sent: 'afuera', tipo: 'bat', ab: 0 }); selDoor = S.doors.length - 1; }
     else selDoor = Number(b.dataset.k);
     update(true); enfocarPuerta();
   });
   $('delDoor').addEventListener('click', function () { if (S.doors.length <= 1) return; S.doors.splice(selDoor, 1); selDoor = 0; update(true); });
-  ['pointerdown', 'focus'].forEach(function (ev) { $('d-pos').addEventListener(ev, enfocarPuerta); $('d-dist').addEventListener(ev, enfocarPuerta); });
+  ['pointerdown', 'focus'].forEach(function (ev) { $('d-pos').addEventListener(ev, enfocarPuerta); $('d-ab').addEventListener(ev, enfocarPuerta); $('d-dist').addEventListener(ev, enfocarPuerta); });
   $('d-cortina').addEventListener('change', function () { curDoor().cortina = this.checked; update(true); });
   $('d-abierta').addEventListener('change', function () { S.abierta = this.checked; update(true); });
   $('d-losa').addEventListener('change', function () { S.losa = this.checked; update(false); });
@@ -1819,13 +2459,15 @@ function iniciar3D() {
       $('d-otra').textContent = nf(Math.max(dd.edge.len - dd.u1, 0), 2);
     }
     $('d-abierta').checked = !!S.abierta; $('d-losa').checked = !!S.losa;
-    var cd = curDoor(); $('d-tam').value = cd.tam; $('d-pos').value = cd.pos; rangeFill($('d-pos')); $('d-cortina').checked = !!cd.cortina; $('d-bis').value = cd.bis; $('d-sent').value = cd.sent; $('sep').value = S.sep || 0; rangeFill($('sep'));
+    var cd = curDoor(); $('d-tam').value = cd.tam; $('d-pos').value = cd.pos; rangeFill($('d-pos')); $('d-cortina').checked = !!cd.cortina; $('d-bis').value = cd.bis; $('d-sent').value = cd.sent;
+    var corr = tipoPuerta(cd) === 'corr'; setSeg('d-tipo', corr ? 'corr' : 'bat'); $('d-bis-lab').textContent = corr ? 'Se corre hacia (vista desde afuera)' : 'Bisagra (vista desde afuera)'; $('d-sent').closest('label').hidden = corr;
+    if (document.activeElement !== $('d-ab')) { $('d-ab').value = cd.ab || 0; rangeFill($('d-ab')); } $('d-ab-txt').textContent = textoAb(cd.ab || 0); $('sep').value = S.sep || 0; rangeFill($('sep'));
     $('v-ext').setAttribute('aria-pressed', String(S.vista === 'ext')); $('v-int').setAttribute('aria-pressed', String(S.vista === 'int'));
   }
 
   // deshacer: se guarda cómo estaba la cava antes de cada cambio (hasta 60 pasos); los arrastres cuentan como uno
   var HIST = { pila: [], cur: null, t: 0, quieto: false };
-  function fotoCava() { return JSON.stringify({ forma: S.forma, pts: S.pts, L: S.L, W: S.W, H: S.H, esp: S.esp, panel: S.panel, doors: S.doors, cols: S.cols, divs: S.divs, salas: S.salas, etq: S.etq, losa: S.losa }); }
+  function fotoCava() { return JSON.stringify({ forma: S.forma, pts: S.pts, L: S.L, W: S.W, H: S.H, esp: S.esp, panel: S.panel, doors: S.doors, cols: S.cols, divs: S.divs, salas: S.salas, etq: S.etq, equipos: S.equipos, losa: S.losa }); }
   function anotarCambio() {
     if (HIST.quieto || ed.drag >= 0 || ed.obj || ed.pinch || ed.drawing) return;
     var f = fotoCava(); if (HIST.cur === null) { HIST.cur = f; return; }
@@ -1833,14 +2475,15 @@ function iniciar3D() {
     var ahora = Date.now();
     var desliza = document.activeElement && document.activeElement.type === 'range';   // un deslizador movido de corrido es un solo paso
     if (!(desliza && ahora - HIST.t < 700 && HIST.pila.length)) { HIST.pila.push(HIST.cur); if (HIST.pila.length > 60) HIST.pila.shift(); }
-    HIST.t = ahora; HIST.cur = f; $('pUndo').disabled = !HIST.pila.length;
+    HIST.t = ahora; HIST.cur = f; marcarUndo();
   }
+  function marcarUndo() { var no = !HIST.pila.length; $('pUndo').disabled = no; $('undo3').disabled = no; }
   function deshacer() {
     if (!HIST.pila.length) return;
     var prev = HIST.pila.pop(); HIST.cur = prev; HIST.t = 0;
-    Object.assign(S, JSON.parse(prev)); ed.sel = -1; ed.selCol = ed.selDiv = ed.selSala = ed.selPC = ed.selEtq = -1; ed.vb = null; ed.err = '';
+    Object.assign(S, JSON.parse(prev)); ed.sel = -1; ed.selCol = ed.selDiv = ed.selSala = ed.selPC = ed.selEtq = ed.selEq = -1; ed.vb = null; ed.err = '';
     HIST.quieto = true; lastKey = ''; update(true); renderLists(); HIST.quieto = false;
-    $('pUndo').disabled = !HIST.pila.length;
+    marcarUndo();
   }
   var lastKey = '';
   function update(geo) {
@@ -1849,10 +2492,11 @@ function iniciar3D() {
     var G = geom();
     S.doors.forEach(function (d) { if (d.e >= G.ed.length || d.e < 0) d.e = 0; });
     S.salas.forEach(function (sa) { if (sa.e >= G.ed.length || sa.e < 0) sa.e = 0; });
+    S.equipos.forEach(function (q) { if (q.e >= G.ed.length || q.e < 0) q.e = 0; });
     GEO = G;
-    var key = [JSON.stringify(G.P), S.H, S.esp, JSON.stringify(S.doors), S.abierta, S.losa, JSON.stringify(S.cols), JSON.stringify(S.divs), JSON.stringify(S.salas), JSON.stringify(S.etq), S.verLocal].join('|');
+    var key = [JSON.stringify(G.P), S.H, S.esp, JSON.stringify(S.doors), S.abierta, S.losa, JSON.stringify(S.cols), JSON.stringify(S.divs), JSON.stringify(S.salas), JSON.stringify(S.etq), JSON.stringify(S.equipos), S.verLocal].join('|');
     if (geo || key !== lastKey) { lastKey = key; rebuild(G); } else applyView();
-    syncUI(G); drawPlan(); renderWallList(G); renderPCols(G); syncLists();
+    syncUI(G); drawPlan(); renderWallList(G); renderPCols(G); syncLists(); resumenes(G);
     var vol = G.area * S.H;
     $('h-vol').textContent = nf(vol, 1) + ' m³'; $('h-piso').textContent = nf(G.area, 1) + ' m²';
     $('st-area').textContent = nf(G.area, 1) + ' m²'; $('st-vol').textContent = nf(vol, 1) + ' m³'; $('st-m2').textContent = nf(stats.m2, 0) + ' m²';
@@ -1909,7 +2553,7 @@ function iniciar3D() {
   }
   function capturar() {
     var W = 1600, H = 1100, pr = renderer.getPixelRatio(), cot = S.cotas, sep = S.sep, vis = S.vista, ab = S.abierta, out = [];
-    renderer.setPixelRatio(1); renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix();
+    renderer.setPixelRatio(1); renderer.setSize(W, H, false); camera.aspect = W / H; camera.clearViewOffset(); camera.updateProjectionMatrix();
     S.cotas = false; S.vista = 'ext'; S.sep = 0; applyView(); fitView(); out.push({ t: 'Vista exterior', img: foto(W, H) });
     S.abierta = true; lastKey = ''; update(true); S.sep = 0.75; applyView(); fitView(); camera.position.multiplyScalar(1.25); controls.update(); out.push({ t: 'Armado: piezas separadas', img: foto(W, H) });
     S.abierta = ab; S.sep = 0; S.vista = 'int'; lastKey = ''; update(true); applyView(); fitView(); out.push({ t: 'Vista por dentro', img: foto(W, H) });
@@ -1923,6 +2567,236 @@ function iniciar3D() {
     try { var imgs = capturar(); src.postMessage({ tipo: 'captura-lista', id: d.id, imgs: imgs }, '*'); }
     catch (err) { src.postMessage({ tipo: 'captura-lista', id: d.id, imgs: [], error: String(err) }, '*'); }
   });
+
+  // el plano de fondo se quitó (se hará con IA): se borra lo que haya quedado guardado en el equipo
+  try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf('pandora-fondo:') === 0) localStorage.removeItem(k); }); } catch (e) {}
+
+  // ---------- Panel compacto: cada tarjeta es una sección plegable (una abierta a la vez) con su resumen ----------
+  var ICO_SEC = {
+    medidas: ['', '<path d="M4 7l8-4 8 4v10l-8 4-8-4z"/><path d="M4 7l8 4 8-4M12 11v10"/>', 'Forma y medidas'],
+    planta: ['ce', '<rect x="2.5" y="5" width="11" height="14" rx="1.5"/><path d="M13.5 9h7.5v9h-7.5"/>', 'Planta, salas y elementos'],
+    panel: ['gr', '<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3 9h18M3 15h18"/>', 'Panel y piso'],
+    puertas: ['', '<path d="M6 21V3h12v18"/><path d="M3 21h18"/><circle cx="14.5" cy="12" r="1" fill="currentColor"/>', 'Puertas']
+  };
+  var secciones = [];
+  document.querySelectorAll('.panel > .card').forEach(function (card, i) {
+    var id = ['medidas', 'planta', 'panel', 'puertas'][i], h = card.querySelector('h2'), ic = ICO_SEC[id];
+    if (!id || !h) return;
+    var cuerpo = document.createElement('div'), dentro = document.createElement('div');
+    cuerpo.className = 'cuerpo'; dentro.className = 'cuerpo-in'; cuerpo.appendChild(dentro);
+    while (h.nextSibling) dentro.appendChild(h.nextSibling);
+    card.appendChild(cuerpo); card.dataset.sec = id;
+    h.innerHTML = '<button type="button" class="cabBtn" aria-expanded="false"><span class="ico ' + ic[0] + '"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">' + ic[1] + '</svg></span>' +
+      '<span class="tit"><b>' + ic[2] + '</b><small class="res"></small></span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>';
+    h.firstChild.addEventListener('click', function () { abrirSeccion(card.classList.contains('abierta') ? null : id); });
+    secciones.push(card);
+  });
+  function abrirSeccion(id) {
+    secciones.forEach(function (c) { var on = c.dataset.sec === id; c.classList.toggle('abierta', on); c.querySelector('.cabBtn').setAttribute('aria-expanded', String(on)); });
+    try { localStorage.setItem('cava3d-seccion', id || '-'); } catch (e) {}
+    if (id && esTel() && HOJA.n === 0) ponerHoja(1);
+    if (id === 'planta') setTimeout(function () { ed.vb = null; drawPlan(); }, 340);
+  }
+  function verSeccion(id) {
+    if (!secciones.some(function (c) { return c.dataset.sec === id && c.classList.contains('abierta'); })) abrirSeccion(id);
+    if (!esTel() && document.body.classList.contains('sinPanel')) ponerPanel(true);
+    if (esTel() && HOJA.n === 0) ponerHoja(1);
+    var c = document.querySelector('.card[data-sec="' + id + '"]'); if (c) setTimeout(function () { c.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+  }
+  function plural(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
+  function resumenes(G) {
+    var put = function (id, t) { var c = document.querySelector('.card[data-sec="' + id + '"] .res'); if (c && c.textContent !== t) c.textContent = t; };
+    var bq = bbox(G.Q);
+    put('medidas', (S.forma === 'rect' ? 'Rectangular · ' + nf(bq.w, 2) + ' × ' + nf(bq.d, 2) : 'Polígono · ' + plural(G.ed.length, 'muro', 'muros')) + ' · alto ' + nf(S.H, 2) + ' m');
+    var p = [], ncol = S.cols.length + pcols(G).length;
+    if (S.salas.length) p.push(plural(S.salas.length, 'sala adyacente', 'salas adyacentes'));
+    if (S.divs.length) p.push(plural(S.divs.length, 'división', 'divisiones'));
+    if (ncol) p.push(plural(ncol, 'columna', 'columnas'));
+    if (S.etq.length) p.push(plural(S.etq.length, 'etiqueta', 'etiquetas'));
+    if (S.equipos.length) p.push(plural(S.equipos.length, 'difusor', 'difusores'));
+    put('planta', p.length ? p.join(' · ') : 'Vista desde arriba · sin salas ni divisiones');
+    put('panel', (S.panel === 'PUR' ? 'Poliuretano' : 'Poliestireno (anime)') + ' · ' + S.esp + ' mm');
+    var tipos = S.doors.map(tipoPuerta), igual = tipos.every(function (t) { return t === tipos[0]; });
+    put('puertas', plural(S.doors.length, 'puerta', 'puertas') + (igual ? ' · ' + (tipos[0] === 'corr' ? 'corrediza' + (S.doors.length > 1 ? 's' : '') : 'batiente' + (S.doors.length > 1 ? 's' : '')) : ''));
+  }
+
+  // ---------- Laptop: el panel flota a la derecha y se puede esconder ----------
+  function ponerPanel(on) {
+    document.body.classList.toggle('sinPanel', !on); $('vPanel').setAttribute('aria-pressed', String(on));
+    try { localStorage.setItem('cava3d-panel', on ? '1' : '0'); } catch (e) {}
+    resize();
+  }
+  $('vPanel').addEventListener('click', function () { ponerPanel(document.body.classList.contains('sinPanel')); });
+  try { if (localStorage.getItem('cava3d-panel') === '0') { document.body.classList.add('sinPanel'); $('vPanel').setAttribute('aria-pressed', 'false'); } } catch (e) {}
+
+  // ---------- Teléfono: el panel es una hoja que sube desde abajo (baja, media, completa) ----------
+  // La hoja sigue al dedo; al soltar, la velocidad decide hasta qué altura llega (como en iOS). Tocar la barrita la sube un nivel.
+  var panelEl = $('panel'), asa = document.createElement('div');
+  asa.className = 'asa'; asa.innerHTML = '<i></i>'; asa.title = 'Arrastra para subir o bajar las opciones'; panelEl.insertBefore(asa, panelEl.firstChild);
+  var HOJA = { n: 1 }, hojaDrag = null;
+  function esTel() { return window.innerWidth < 980; }
+  function alturasHoja() { var H = panelEl.clientHeight, app = document.querySelector('.app').clientHeight; return [Math.min(116, H), Math.round(app * 0.5), H]; }
+  function ponerHoja(n) {
+    HOJA.n = n; panelEl.classList.remove('arrastra');
+    if (!esTel()) { panelEl.style.transform = ''; viewer.style.bottom = ''; return; }
+    var v = alturasHoja(); panelEl.style.transform = 'translateY(' + (panelEl.clientHeight - v[n]) + 'px)';
+    viewer.style.bottom = v[n] + 'px';   // el 3D usa lo que la hoja deja libre arriba
+    resize(); if (visorOn) enVisor(true);
+  }
+  function goma(x) { return x * 300 * 0.55 / (300 + 0.55 * x); }
+  asa.addEventListener('pointerdown', function (e) {
+    if (!esTel()) return; try { asa.setPointerCapture(e.pointerId); } catch (x) {}
+    var H = panelEl.clientHeight, v = alturasHoja(), t0 = H - v[HOJA.n];
+    hojaDrag = { y0: e.clientY, base: t0, ty: t0, H: H, v: v, h: [[e.clientY, performance.now()]], mov: false };
+  });
+  asa.addEventListener('pointermove', function (e) {
+    var d = hojaDrag; if (!d) return;
+    var dy = e.clientY - d.y0; if (!d.mov && Math.abs(dy) < 6) return;
+    d.mov = true;
+    var t = d.base + dy, min = d.H - d.v[2], max = d.H - d.v[0];
+    if (t < min) t = min - goma(min - t); if (t > max) t = max + goma(t - max);
+    d.ty = t; d.h.push([e.clientY, performance.now()]); if (d.h.length > 6) d.h.shift();
+    panelEl.classList.add('arrastra'); panelEl.style.transform = 'translateY(' + t + 'px)';
+  });
+  function soltarHoja() {
+    var d = hojaDrag; hojaDrag = null; if (!d) return;
+    if (!d.mov) { ponerHoja(HOJA.n === 2 ? 0 : HOJA.n + 1); return; }
+    var a = d.h[0], b = d.h[d.h.length - 1], dt = (b[1] - a[1]) / 1000, vel = dt > 0 ? (b[0] - a[0]) / dt : 0;
+    var dest = d.ty + (vel / 1000) * 0.998 / (1 - 0.998), mejor = 0;
+    d.v.forEach(function (vv, i) { if (Math.abs(d.H - vv - dest) < Math.abs(d.H - d.v[mejor] - dest)) mejor = i; });
+    ponerHoja(mejor);
+  }
+  asa.addEventListener('pointerup', soltarHoja); asa.addEventListener('pointercancel', soltarHoja);
+  var anchoAntes = window.innerWidth;
+  window.addEventListener('resize', function () { if (esTel() !== (anchoAntes < 980) || esTel()) ponerHoja(HOJA.n); anchoAntes = window.innerWidth; });
+
+  // ---------- Herramientas (columna de la izquierda) ----------
+  $('rDibujar').addEventListener('click', function () { if (modo3d) stopDraw(); else { salirSala(); startDraw(true); } });
+  $('rSala').addEventListener('click', function () { if (modoSala) salirSala(); else entrarSala(); });
+  $('rDiv').addEventListener('click', function () { salirSala(); verSeccion('planta'); $('addDiv').click(); });
+  $('rCol').addEventListener('click', function () { salirSala(); $('addCol').click(); verSeccion('planta'); });
+  $('rEtq').addEventListener('click', function () { salirSala(); $('addEtq').click(); verSeccion('planta'); });
+  $('rPlanta').addEventListener('click', function () { verSeccion('planta'); });
+  $('dibSala').addEventListener('click', entrarSala);
+
+  // ---------- Sala adyacente: se dibuja desde cualquier punto de una pared, hacia afuera ----------
+  // Se toca la pared (en el piso, junto a su cara de afuera) y se arrastra: a lo largo da el ancho, hacia afuera el fondo.
+  var modoSala = false, salaIni = null, salaMed = null, salaHover = null, salaG = new THREE.Group(), slabelsEl = document.createElement('div');
+  slabelsEl.className = 'labels'; viewer.appendChild(slabelsEl);
+  var matSala = new THREE.MeshBasicMaterial({ color: 0x7FE3F0, transparent: true, opacity: 0.2, depthWrite: false, side: THREE.DoubleSide });
+  var matSalaF = new THREE.MeshBasicMaterial({ color: 0x7FE3F0, transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide });
+  var SALA_TXT = 'Toca un punto de una pared y arrastra hacia afuera';
+  function entrarSala() {
+    if (ed.drawing || !GEO) return;
+    modoSala = true; salaIni = salaMed = salaHover = null;
+    document.body.classList.add('sala3d'); $('rSala').setAttribute('aria-pressed', 'true');
+    $('salaTxt').textContent = SALA_TXT; $('salaBar').hidden = false;
+    if (esTel()) ponerHoja(0);
+    pintarSala();
+  }
+  function salirSala() {
+    if (!modoSala) return;
+    modoSala = false; salaIni = salaMed = salaHover = null; controls.enabled = true;
+    document.body.classList.remove('sala3d'); $('rSala').setAttribute('aria-pressed', 'false'); $('salaBar').hidden = true;
+    pintarSala();
+    if (esTel() && HOJA.n === 0) ponerHoja(1);
+  }
+  $('salaCancel').addEventListener('click', salirSala);
+  // punto del piso bajo el puntero, en metros de la planta
+  var planoAltura = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  function pisoPlanta(evt, y) {
+    var r = lienzo.getBoundingClientRect(), q = new THREE.Vector3(), pl = pisoPl;
+    if (y !== undefined) { planoAltura.constant = -y; pl = planoAltura; }   // a la altura donde se tocó la pared
+    rayo.setFromCamera(new THREE.Vector2((evt.clientX - r.left) / r.width * 2 - 1, -((evt.clientY - r.top) / r.height) * 2 + 1), camera);
+    if (!rayo.ray.intersectPlane(pl, q)) return null;
+    return [q.x - root.position.x, q.z - root.position.z];
+  }
+  // a lo largo (u) y hacia afuera (z) de un muro; z = 0 es la cara de adentro de la cava
+  function enMuro(p, i) { var E = GEO.ed[i], dx = p[0] - E.a[0], dz = p[1] - E.a[1]; return { e: i, u: dx * E.e[0] + dz * E.e[1], z: dx * E.n[0] + dz * E.n[1] }; }
+  var planoMuro = new THREE.Plane(), nMuro = new THREE.Vector3(), pMuro = new THREE.Vector3(), qMuro = new THREE.Vector3();
+  function paredCerca(evt) {
+    if (!GEO) return null;
+    var t = S.esp / 1000, mejor = null, rp = root.position;
+    // 1) tocando la pared misma: su cara de afuera, la más cercana a la cámara
+    var r = lienzo.getBoundingClientRect();
+    rayo.setFromCamera(new THREE.Vector2((evt.clientX - r.left) / r.width * 2 - 1, -((evt.clientY - r.top) / r.height) * 2 + 1), camera);
+    var cerca = Infinity;
+    GEO.ed.forEach(function (E, i) {
+      nMuro.set(E.n[0], 0, E.n[1]); if (rayo.ray.direction.dot(nMuro) >= 0) return;   // se ve por detrás
+      pMuro.set(E.a[0] + E.n[0] * t + rp.x, 0, E.a[1] + E.n[1] * t + rp.z); planoMuro.setFromNormalAndCoplanarPoint(nMuro, pMuro);
+      if (!rayo.ray.intersectPlane(planoMuro, qMuro) || qMuro.y < -0.15 || qMuro.y > S.H + 0.15) return;
+      var m = enMuro([qMuro.x - rp.x, qMuro.z - rp.z], i); if (m.u < 0 || m.u > E.len) return;
+      var dd = qMuro.distanceTo(rayo.ray.origin); if (dd < cerca) { cerca = dd; m.dist = 0; m.z = t; m.y = Math.max(qMuro.y, 0.05); mejor = m; }
+    });
+    if (mejor) return mejor;
+    // 2) tocando el piso junto a la cara de afuera de una pared
+    var p = pisoPlanta(evt); if (!p) return null;
+    GEO.ed.forEach(function (E, i) { var m = enMuro(p, i); if (m.u < -0.15 || m.u > E.len + 0.15 || m.z < t - 0.5) return; m.dist = Math.abs(m.z - t); m.u = Math.min(Math.max(m.u, 0), E.len); if (!mejor || m.dist < mejor.dist) mejor = m; });
+    return mejor;
+  }
+  function medirSala(evt) {
+    var p = pisoPlanta(evt, salaIni.y); if (!p) return salaMed;
+    var E = GEO.ed[salaIni.e], m = enMuro(p, salaIni.e), t = S.esp / 1000;
+    var a = Math.min(Math.max(snap(Math.min(salaIni.u, m.u)), 0), E.len), b = Math.min(Math.max(snap(Math.max(salaIni.u, m.u)), 0), E.len);
+    return { e: salaIni.e, u0: r2(a), w: r2(b - a), d: r2(Math.max(snap(m.z - 2 * t), 0)) };
+  }
+  // la sala se mueve con la cava: su dibujo va dentro de root, en las coordenadas de la planta
+  function marcoMuro(E) { var g = new THREE.Group(); g.position.set(E.a[0], 0, E.a[1]); g.rotation.y = Math.atan2(-E.e[1], E.e[0]); salaG.add(g); return g; }
+  function pintarSala() {
+    if (salaG.parent !== root) root.add(salaG);
+    while (salaG.children.length) { var o = salaG.children[0]; salaG.remove(o); o.traverse(function (c) { if (c.geometry) c.geometry.dispose(); }); }
+    if (modoSala && GEO) {
+      var t = S.esp / 1000;
+      if (salaIni && salaMed && salaMed.w > 0.05) {
+        var g = marcoMuro(GEO.ed[salaMed.e]), D = Math.max(salaMed.d, 0.05);
+        var caja = new THREE.Mesh(new THREE.BoxGeometry(salaMed.w + 2 * t, S.H, D + t), matSala); caja.position.set(salaMed.u0 + salaMed.w / 2, S.H / 2, t + (D + t) / 2); g.add(caja);
+        var bordes = new THREE.LineSegments(new THREE.EdgesGeometry(caja.geometry), new THREE.LineBasicMaterial({ color: 0x7FE3F0 })); bordes.position.copy(caja.position); g.add(bordes);
+      } else if (salaHover && salaHover.dist < 1.2) {
+        var E2 = GEO.ed[salaHover.e], g2 = marcoMuro(E2);
+        var cara = new THREE.Mesh(new THREE.PlaneGeometry(E2.len, S.H), matSala); cara.position.set(E2.len / 2, S.H / 2, t + 0.02); g2.add(cara);
+        var linea = new THREE.Mesh(new THREE.BoxGeometry(0.06, S.H + 0.1, 0.06), matSalaF); linea.position.set(salaHover.u, (S.H + 0.1) / 2, t + 0.04); g2.add(linea);
+      }
+    }
+    placeSalaLabels(); pedir();
+  }
+  function placeSalaLabels() {
+    if (!slabelsEl) return;
+    if (!(modoSala && salaIni && salaMed && GEO)) { if (slabelsEl.innerHTML) slabelsEl.innerHTML = ''; return; }
+    var E = GEO.ed[salaMed.e], t = S.esp / 1000, w = viewer.clientWidth, h = viewer.clientHeight, rp = root.position;
+    var pt = function (u, z) { return [E.a[0] + E.e[0] * u + E.n[0] * z + rp.x, E.a[1] + E.e[1] * u + E.n[1] * z + rp.z]; };
+    var chips = [[pt(salaMed.u0 + salaMed.w / 2, 2 * t + salaMed.d + 0.25), nf(salaMed.w, 2) + ' m'], [pt(salaMed.u0 + salaMed.w + t + 0.3, t + salaMed.d / 2), nf(salaMed.d, 2) + ' m']];
+    slabelsEl.innerHTML = chips.map(function (c) {
+      tmpV.set(c[0][0], 0.05, c[0][1]).project(camera); if (tmpV.z >= 1) return '';
+      return '<div class="chip" style="left:' + ((tmpV.x + 1) / 2 * w).toFixed(1) + 'px;top:' + ((1 - tmpV.y) / 2 * h).toFixed(1) + 'px;color:#c9f4fa">' + c[1] + '</div>';
+    }).join('');
+  }
+  // el toque cerca de una pared empieza la sala (y no gira la vista); lejos de las paredes, se gira como siempre
+  viewer.addEventListener('pointerdown', function (e) {
+    if (!modoSala || e.target !== lienzo || !GEO) return;
+    var p = paredCerca(e); if (!p || p.dist > Math.max(0.6, tol3() * 2.5)) return;
+    controls.enabled = false; salaIni = { e: p.e, u: p.u, y: p.y }; salaMed = null;
+    try { lienzo.setPointerCapture(e.pointerId); } catch (x) {}
+    pintarSala();
+  }, true);
+  lienzo.addEventListener('pointermove', function (e) {
+    if (!modoSala) return;
+    if (salaIni) salaMed = medirSala(e); else if (e.pointerType === 'mouse') salaHover = paredCerca(e);
+    pintarSala();
+  });
+  function soltarSala(e) {
+    if (!modoSala || !salaIni) return;
+    var m = medirSala(e) || salaMed; salaIni = null; salaMed = null; controls.enabled = true;
+    if (m && m.w >= 0.8 && m.d >= 0.8) {
+      S.salas.push({ e: m.e, u0: m.u0, w: m.w, d: m.d, h: S.H, pCava: true, pExt: false });
+      ed.selSala = S.salas.length - 1; salirSala(); ed.vb = null; update(true); renderLists();
+      verSeccion('planta'); setTimeout(function () { $('fit').click(); }, 80);
+    } else {
+      $('salaTxt').textContent = 'Arrastra al menos 0,80 m a lo largo de la pared y 0,80 m hacia afuera';
+      pintarSala();
+    }
+  }
+  lienzo.addEventListener('pointerup', soltarSala);
+  lienzo.addEventListener('pointercancel', function () { if (salaIni) { salaIni = salaMed = null; controls.enabled = true; pintarSala(); } });
 
   if (CLI) iniciarCliente();
   else if (EMB) { document.querySelector('.top').hidden = true; document.querySelector('.app').classList.add('emb'); }
@@ -1940,8 +2814,6 @@ function iniciar3D() {
     var aviso = document.createElement('div'); aviso.className = 'cliAviso';
     aviso.textContent = 'Arrastra para girar · Pellizca para acercar y entrar · Toca dos veces para separar las piezas';
     viewer.appendChild(aviso); setTimeout(function () { aviso.classList.add('fuera'); }, 7000);
-    // solo cuando lo abre el vendedor desde la app: una flecha discreta para volver (el cliente no la ve)
-    if (Q.get('volver')) { var vv = document.createElement('button'); vv.type = 'button'; vv.className = 'btn volverFijo'; vv.textContent = '←'; vv.setAttribute('aria-label', 'Volver a la calculadora'); vv.addEventListener('click', function () { location.href = Q.get('volver'); }); document.body.appendChild(vv); }
     // por dentro: al acercarse la cámara, se quita el techo y se aclaran los muros de adelante
     var dRef = 0;
     controls.addEventListener('change', function () {
@@ -1965,7 +2837,10 @@ function iniciar3D() {
     });
   }
   if (Q.get('nombre')) $('eyebrow').textContent = 'Pandora Group Tool · ' + Q.get('nombre');
+  var secIni = 'medidas'; try { var sv = localStorage.getItem('cava3d-seccion'); if (sv) secIni = sv === '-' ? null : sv; } catch (e) {}
+  abrirSeccion(secIni);
   resize();
+  ponerHoja(1);
   renderLists();
   update(true);
   fitView();
@@ -1976,8 +2851,25 @@ function iniciar3D() {
 }
 (function () {
   function ld(src) { return new Promise(function (ok, no) { var e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = no; document.head.appendChild(e); }); }
-  ld('three.min.js').then(function () { return ld('OrbitControls.js'); })
-    .catch(function () { return ld('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js').then(function () { return ld('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'); }); })
+  // three.js con OrbitControls, en un solo archivo junto a esta página (web/vite.three.config.js)
+  // vista del cliente: el diseño viaja en el enlace, comprimido (z=, deflate en base64url) o sin comprimir (c=, los enlaces de antes)
+  function b64u(t) { var s = atob(t.replace(/-/g, '+').replace(/_/g, '/')), b = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; }
+  function leerDiseno() {
+    var Q = new URLSearchParams(location.search);
+    if (Q.get('cliente') !== '1') return Promise.resolve(null);
+    var z = Q.get('z'), c = Q.get('c');
+    if (z) {
+      if (typeof DecompressionStream === 'undefined') return Promise.reject(new Error('sin DecompressionStream'));
+      return new Response(new Blob([b64u(z)]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text().then(JSON.parse);
+    }
+    return Promise.resolve(c ? JSON.parse(new TextDecoder().decode(b64u(c))) : null);
+  }
+  var diseno = leerDiseno().then(function (d) { window.__disenoCliente = d; }, function () {
+    var m = document.createElement('div'); m.className = 'cliError';
+    m.textContent = 'No se pudo abrir este diseño en este navegador. Actualiza el navegador del teléfono o ábrelo en otro (Chrome o Safari recientes).';
+    document.body.appendChild(m); throw new Error('diseño');
+  });
+  Promise.all([ld('three-pandora.js'), diseno])
     .then(iniciar3D)
     .catch(function () { var h = document.querySelector('.help'); if (h) { h.textContent = 'No se pudo cargar el visor 3D. Revisa la conexión.'; h.style.display = 'block'; } });
 })();
