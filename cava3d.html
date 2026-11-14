@@ -327,6 +327,14 @@ body.sala3d .viewer .hud, body.sala3d .viewer .sep { display: none; }
   .sep { width: min(38%, 160px); }
 }
 @media (min-width: 980px) { .asa { display: none; } }
+/* ===== Vista libre (2026-11): solo el modelo, sin botones; el local con todas sus cavas ===== */
+body.libre .vtools, body.libre .rail, body.libre .hud, body.libre .sep, body.libre .pestanas, body.libre .panel, body.libre .help, body.libre .undo3, body.libre .top, body.libre .salaBar { display: none !important; }
+body.libre .viewer, body.pest.libre .viewer { bottom: 0 !important; }
+.libreSalir { position: absolute; z-index: 20; top: max(12px, env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); min-height: 44px; padding: 0 16px;
+  display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; background: rgba(6,24,58,.62); color: #fff; font: 600 14px var(--body); cursor: pointer;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: inset 0 0 0 .5px rgba(255,255,255,.2); }
+.libreSalir[hidden] { display: none !important; }
+.libreSalir:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 /* ===== Pestañas (2026-11): el 3D ocupa toda la pantalla; cada sección se abre desde una pestaña pequeña abajo ===== */
 body.pest .viewer { position: absolute !important; left: 0 !important; right: 0 !important; top: 0 !important; bottom: calc(58px + env(safe-area-inset-bottom, 0px)) !important; height: auto !important; min-height: 0 !important; box-shadow: none !important; }
 body.pest .asa, body.pest .cabBtn, body.pest #vPanel { display: none !important; }
@@ -408,9 +416,11 @@ input[type=range], .sep input { height: 44px; }
       <button type="button" class="btn ghost" id="cotas" aria-pressed="false">Cotas</button>
       <button type="button" class="btn ghost" id="verLocal" aria-pressed="true" hidden>Local</button>
       <button type="button" class="btn ghost" id="fit">Centrar</button>
+      <button type="button" class="btn ghost" id="libre" aria-pressed="false" aria-label="Vista libre: solo el modelo, sin botones" title="Vista libre"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4"/><circle cx="12" cy="12" r="2.5"/></svg></button>
       <button type="button" class="btn ghost" id="vPanel" aria-pressed="true" aria-label="Mostrar u ocultar las opciones" title="Mostrar u ocultar las opciones"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M15 4.5v15"/></svg></button>
     </div>
     <button type="button" class="undo3" id="undo3" disabled aria-label="Deshacer el último cambio" title="Deshacer el último cambio"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 010 10h-3"/></svg></button>
+    <button type="button" class="libreSalir" id="libreSalir" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>Salir de vista libre</button>
     <nav class="rail" aria-label="Herramientas">
       <button type="button" id="rDibujar" aria-pressed="false" aria-label="Dibujar la cava en 3D" title="Dibujar la cava en 3D"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-11 10 4-4 9z"/><circle cx="4" cy="17" r="1.6" fill="currentColor"/><circle cx="10" cy="6" r="1.6" fill="currentColor"/><circle cx="20" cy="10" r="1.6" fill="currentColor"/></svg><span>Dibujar</span></button>
       <hr>
@@ -1245,6 +1255,16 @@ function iniciar3D() {
       else prism(Q2, 0, o.H, mW, localG);
       prism(Q2, o.H, o.t, mT, localG);
       prism(Q2, FY, -FY, M(0xEFE6C8, { roughness: 0.85 }), localG).castShadow = false;
+      // sus puertas: hoja y marco naranja por fuera del muro, igual que en esta cava
+      var cq = Q2.reduce(function (s2, q) { return [s2[0] + q[0] / nq, s2[1] + q[1] / nq]; }, [0, 0]), mH = M(0xE6EBF1, { roughness: 0.5 }), mM = M(0xE89A3C, { roughness: 0.5 });
+      (o.puertas || []).forEach(function (d) {
+        var A = aCava(d.a), B = aCava(d.b), dx = B[0] - A[0], dz = B[1] - A[1], ln = Math.hypot(dx, dz) || 1, nx = -dz / ln, nz = dx / ln;
+        var mx = (A[0] + B[0]) / 2, mz = (A[1] + B[1]) / 2; if ((mx - cq[0]) * nx + (mz - cq[1]) * nz < 0) { nx = -nx; nz = -nz; }
+        var off = (o.t || 0.08) + 0.03, a2 = [A[0] + nx * off, A[1] + nz * off], b2 = [B[0] + nx * off, B[1] + nz * off], hp = Math.min(d.h || 2.1, o.H - 0.05);
+        bar(a2, b2, hp / 2, 0.03, hp, mH, localG);
+        box(0.07, hp, 0.07, mM, a2[0], hp / 2, a2[1], localG); box(0.07, hp, 0.07, mM, b2[0], hp / 2, b2[1], localG);
+        bar(a2, b2, hp + 0.035, 0.07, 0.07, mM, localG);
+      });
       var b = bbox(Q2); llabels.push({ p: [(b.x0 + b.x1) / 2, o.H + o.t + 0.3, (b.z0 + b.z1) / 2], t: o.nombre + (o.tag ? ' · ' + o.tag : ''), cls: 'lc' });
     });
   }
@@ -2661,6 +2681,18 @@ function iniciar3D() {
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('pest-on')) abrirSeccion(null); });
   }
+  // ---------- Vista libre: oculta botones, pestañas y la barra de la app (le avisa a la calculadora); muestra el local completo ----------
+  function vistaLibre(on) {
+    document.body.classList.toggle('libre', on); $('libre').setAttribute('aria-pressed', String(on)); $('libreSalir').hidden = !on;
+    if (on) { if (document.body.classList.contains('pest-on')) abrirSeccion(null); if (LCX && !S.verLocal) { S.verLocal = true; var vl = $('verLocal'); if (vl) vl.setAttribute('aria-pressed', 'true'); lastKey = ''; update(true); } }
+    try { if (EMB) parent.postMessage({ tipo: 'vista-libre', on: on }, '*'); } catch (e) {}
+    setTimeout(function () { resize(); pedir(); }, 60);
+    if (!on) $('libre').focus(); else $('libreSalir').focus();
+  }
+  $('libre').addEventListener('click', function () { vistaLibre(!document.body.classList.contains('libre')); });
+  $('libreSalir').addEventListener('click', function () { vistaLibre(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.body.classList.contains('libre')) vistaLibre(false); });
+  window.addEventListener('message', function (e) { if (e.data && e.data.tipo === 'salir-libre' && document.body.classList.contains('libre')) vistaLibre(false); });
   function pintarPest(id) {
     if (!PEST) return;
     document.body.classList.toggle('pest-on', !!id);
